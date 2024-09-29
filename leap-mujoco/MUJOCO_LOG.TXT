@@ -1,0 +1,60 @@
+Tue Aug  6 18:51:50 2024
+WARNING: File size over 2GB is not supported. File: '/home/iitgn-robotics/Downloads/mujoco-3.1.6-linux-x86_64/mujoco-3.1.6/model/leap hand'
+
+Fri Aug  9 15:26:24 2024
+WARNING: Nan, Inf or huge value in QACC at DOF 14. The simulation is unstable. Time = 0.0142.
+
+Fri Aug  9 15:27:44 2024
+WARNING: Nan, Inf or huge value in QACC at DOF 9. The simulation is unstable. Time = 0.0400.
+
+Fri Aug  9 15:27:58 2024
+WARNING: Nan, Inf or huge value in QACC at DOF 0. The simulation is unstable. Time = 0.2000.
+
+Fri Aug  9 15:28:26 2024
+WARNING: Nan, Inf or huge value in QACC at DOF 3. The simulation is unstable. Time = 1.8000.
+
+Fri Aug  9 15:46:37 2024
+WARNING: Nan, Inf or huge value in QACC at DOF 14. The simulation is unstable. Time = 0.0142.
+
+Fri Aug  9 15:47:09 2024
+WARNING: Nan, Inf or huge value in QACC at DOF 14. The simulation is unstable. Time = 0.0110.
+
+Fri Aug  9 15:53:27 2024
+WARNING: Nan, Inf or huge value in QACC at DOF 14. The simulation is unstable. Time = 0.0142.
+
+Fri Aug  9 15:55:28 2024
+WARNING: Nan, Inf or huge value in QACC at DOF 14. The simulation is unstable. Time = 0.0276.
+
+Fri Aug  9 15:55:44 2024
+WARNING: Nan, Inf or huge value in QACC at DOF 14. The simulation is unstable. Time = 0.0142.
+
+Fri Aug  9 15:57:02 2024
+WARNING: Nan, Inf or huge value in QACC at DOF 14. The simulation is unstable. Time = 0.0142.
+
+Fri Aug  9 16:17:54 2024
+WARNING: Nan, Inf or huge value in QACC at DOF 14. The simulation is unstable. Time = 0.1544.
+
+Fri Aug  9 16:44:40 2024
+WARNING: Nan, Inf or huge value in QACC at DOF 14. The simulation is unstable. Time = 0.0142.
+
+Fri Aug  9 16:45:09 2024
+WARNING: Nan, Inf or huge value in QACC at DOF 14. The simulation is unstable. Time = 0.0142.
+
+Tue Aug 27 00:31:35 2024
+WARNING: mju_openResource: unknown file '/home/sysidea/leap_hand_mujoco/model/leap hand/leadhand_19.8.24.xml'
+
+Tue Aug 27 00:32:09 2024
+WARNING: mju_openResource: unknown file '/home/sysidea/leap_hand_mujoco/model/leap hand/leadhand_19.8.24.xml'
+
+Thu Aug 29 18:52:05 2024
+WARNING: Nan, Inf or huge value in QACC at DOF 0. The simulation is unstable. Time = 83.1335.
+
+Thu Aug 29 21:59:38 2024
+WARNING: Nan, Inf or huge value in QACC at DOF 0. The simulation is unstable. Time = 94.3575.
+
+Fri Aug 30 19:42:09 2024
+WARNING: Nan, Inf or huge value in QACC at DOF 0. The simulation is unstable. Time = 6.9487.
+
+Sat Aug 31 03:30:33 2024
+WARNING: Nan, Inf or huge value in QACC at DOF 0. The simulation is unstable. Time = 17.1450.
+

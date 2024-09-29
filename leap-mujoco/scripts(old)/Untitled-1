@@ -1,0 +1,123 @@
+import time
+
+import mujoco
+import mujoco.viewer
+
+m = mujoco.MjModel.from_xml_path('/home/iitgn-robotics/Downloads/mujoco-3.1.6-linux-x86_64/mujoco-3.1.6/model/leap hand/leaphand.xml')
+d = mujoco.MjData(m)
+
+with mujoco.viewer.launch_passive(m, d) as viewer:
+  # Close the viewer automatically after 30 wall-seconds.
+  start = time.time()
+  while viewer.is_running(): #and time.time() - start < 30:
+    step_start = time.time()
+
+    # mj_step can be replaced with code that also evaluates
+    # a policy and applies a control signal before stepping the physics.
+    mujoco.mj_step(m, d)
+
+    # Example modification of a viewer option: toggle contact points every two seconds.
+    with viewer.lock():
+      viewer.opt.flags[mujoco.mjtVisFlag.mjVIS_CONTACTPOINT] = int(d.time % 2)
+
+    # Pick up changes to the physics state, apply perturbations, update options from GUI.
+    viewer.sync()
+
+    # Rudimentary time keeping, will drift relative to wall clock.
+    time_until_next_step = m.opt.timestep - (time.time() - step_start)
+    if time_until_next_step > 0:
+      time.sleep(time_until_next_step)
+
+# import mujoco_py
+# import numpy as np
+# import time
+
+# # Load the model and create a simulation
+# model = mujoco_py.load_model_from_path("/home/iitgn-robotics/Downloads/mujoco-3.1.6-linux-x86_64/mujoco-3.1.6/model/leap hand/leaphand.xml")
+# sim = mujoco_py.MjSim(model)
+# viewer = mujoco_py.MjViewer(sim)
+
+# # Set joint positions (example: set joint 1 to 0.5 radian)
+# def set_joint_positions(sim, joint_positions):
+#     for i, pos in enumerate(joint_positions):
+#         sim.data.qpos[i] = pos
+#     sim.forward()
+
+# # Example joint positions (update these values as needed)
+# joint_positions = [
+#     0.0,   # Joint 1
+#     0.0,   # Joint 2
+#     0.0,   # Joint 3
+#     0.0,   # Joint 4
+#     0.0,   # Joint 5
+#     0.0,   # Joint 6
+#     0.0,   # Joint 7
+#     0.0,   # Joint 8
+#     0.0,   # Joint 9
+#     0.0,   # Joint 10
+#     0.0,   # Joint 11
+#     0.0,   # Joint 12
+#     0.0,   # Joint 13
+#     0.0,   # Joint 14
+#     0.0    # Joint 15
+# ]
+
+# # Main simulation loop
+# try:
+#     while True:
+#         set_joint_positions(sim, joint_positions)
+#         sim.step()
+#         viewer.render()
+#         time.sleep(0.01)  # Adjust the sleep time as needed
+# except KeyboardInterrupt:
+#     print("Simulation interrupted")
+
+# import mujoco
+# import mujoco.viewer
+# import mujoco_py
+# import numpy as np
+# import time
+
+# # Load the model
+# model_path = '/home/iitgn-robotics/Downloads/mujoco-3.1.6-linux-x86_64/mujoco-3.1.6/model/leap hand/leaphand.xml'
+# model = mujoco.MjModel.from_xml_path(model_path)
+# data = mujoco.MjData(model)
+
+# # Create a viewer
+# with mujoco.viewer.launch_passive(model, data) as viewer:
+#     start = time.time()
+
+#     # Define joint positions
+#     joint_positions = np.zeros(15)  # Adjust size according to the number of joints
+
+#     # Set joint positions function
+#     def set_joint_positions(data, joint_positions):
+#         for i, pos in enumerate(joint_positions):
+#             data.qpos[i] = pos
+#         mujoco.mj_forward(model, data)
+
+#     # Main simulation loop
+#     try:
+#         while viewer.is_running() and time.time() - start < 1000000000000000000000000000000:
+#             step_start = time.time()
+
+#             # Set joint positions
+#             set_joint_positions(data, joint_positions)
+
+#             # Step the simulation
+#             mujoco.mj_step(model, data)
+
+#             # Example modification of a viewer option
+#             with viewer.lock():
+#                 viewer.opt.flags[mujoco.mjtVisFlag.mjVIS_CONTACTPOINT] = int(data.time % 2)
+
+#             # Sync viewer
+#             viewer.sync()
+
+#             # Rudimentary time keeping
+#             time_until_next_step = model.opt.timestep - (time.time() - step_start)
+#             if time_until_next_step > 0:
+#                 time.sleep(time_until_next_step)
+
+#     except KeyboardInterrupt:
+#         print("Simulation interrupted")

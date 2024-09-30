@@ -2,7 +2,7 @@ import mujoco
 import mujoco.viewer
 
 
-model = mujoco.MjModel.from_xml_path('/home/saniya/LEAP/leap_hand_mujoco/model/leap hand/index_finger_diff_jac.xml')
+model = mujoco.MjModel.from_xml_path('/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_ring.xml')
 data = mujoco.MjData(model)
 
 

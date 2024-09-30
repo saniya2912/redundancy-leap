@@ -17,7 +17,7 @@
   </asset>
 
   <worldbody>
-    <body name="mcp_joint_3" pos="-0.00709525 -0.0678422 -0.0187224" quat="0.5 0.5 0.5 -0.5">
+    <body name="mcp_joint_3" pos="0 0 0" quat="0.5 0.5 0.5 -0.5">
       <joint name="9" pos="0 0 0" axis="0 0 -1" range="-0.314 2.23" damping="0.1"/>
       <geom pos="0.0084069 0.00776624 0.0146574" quat="1 0 0 0" type="mesh" rgba="0.866667 0.866667 0.0509804 1" mesh="mcp_joint"/>
       <body name="pip_3" pos="-0.0122 0.0381 0.0145" quat="0.5 -0.5 -0.5 0.5">

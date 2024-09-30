@@ -342,22 +342,104 @@ class GraspClass:
         G = np.hstack(self.G_matrices)
         return G
     
-    def J(self,xml_path,site_name):
-        self.model=mujoco.MjModel.from_xml_path(xml_path)
-        self.data = mujoco.MjData(self.model)
-        mujoco.mj_forward(self.model, self.data)
-        jacp = np.zeros((3, self.model.nv))  # translation jacobian
-        jacr = np.zeros((3, self.model.nv)) 
+    def J_p(self,model,data,site_name):
+        mujoco.mj_forward(model, data)
+        jacp = np.zeros((3, model.nv))  # translation jacobian
+        jacr = np.zeros((3, model.nv)) 
 
-        site_id=self.model.site(site_name).id
-        mujoco.mj_jacSite(self.model, self.data, jacp, jacr, site_id)
+        site_id=model.site(site_name).id
+        mujoco.mj_jacSite(model, data, jacp, jacr, site_id)
 
-        return np.vstack((jacp, jacr))
+        return jacp
     
     def Jh(self,n,contact_orientations,Rpks,Js):
         for i in range(n):
             Jh_i=np.matmul(np.matmul(contact_orientations[i].T,Rpks[i]),Js[i])
             self.Jh_blocks.append(Jh_i)
         return block_diag(*self.Jh_blocks)    
+    
+
+class TransMatrix:
+    def rotation_x(self,theta):
+        """
+        Returns the rotation matrix for a rotation about the X-axis by an angle theta (in degrees).
+        """
+        radians = np.radians(theta)
+        cos_theta = np.cos(radians)
+        sin_theta = np.sin(radians)
+        
+        R_x = np.array([[1, 0, 0],
+                        [0, cos_theta, -sin_theta],
+                        [0, sin_theta, cos_theta]])
+        
+        return R_x
+
+    # Define rotation matrix for rotation around the Y-axis
+    def rotation_y(self,theta):
+        """
+        Returns the rotation matrix for a rotation about the Y-axis by an angle theta (in degrees).
+        """
+        radians = np.radians(theta)
+        cos_theta = np.cos(radians)
+        sin_theta = np.sin(radians)
+        
+        R_y = np.array([[cos_theta, 0, sin_theta],
+                        [0, 1, 0],
+                        [-sin_theta, 0, cos_theta]])
+        
+        return R_y
+
+    # Define rotation matrix for rotation around the Z-axis
+    def rotation_z(self,theta):
+        """
+        Returns the rotation matrix for a rotation about the Z-axis by an angle theta (in degrees).
+        """
+        radians = np.radians(theta)
+        cos_theta = np.cos(radians)
+        sin_theta = np.sin(radians)
+        
+        R_z = np.array([[cos_theta, -sin_theta, 0],
+                        [sin_theta, cos_theta, 0],
+                        [0, 0, 1]])
+        
+        return R_z
+
+    # Function to compute the left and right finger rotations using the dynamic rotation matrices
+    def compute_finger_rotations(self,object_pose_cam, palm_to_cam):
+    
+        # Rotation matrices for -90° and 90° rotations
+        R_x_90 = self.rotation_x(90)
+        R_x_minus_90 = self.rotation_x(-90)
+        R_z_minus_90 = self.rotation_z(-90)
+        R_y_180=self.rotation_y(180)
+
+        # Extract rotation matrices from the transformation matrices
+        R_object_cam = object_pose_cam[:3, :3]  # Object pose rotation in the camera frame
+        R_palm_cam = R_y_180 @ palm_to_cam[:3, :3]       # Palm to camera rotation matrix
+        R_cam_palm = R_palm_cam.T               # Camera to palm rotation matrix
+
+        R_object_palm = R_object_cam @ R_cam_palm
+        # Compute left finger's rotation matrix: T^B_L = R_object_cam * R_cam_palm * R_y(-90°)
+        left_finger_rotation = R_object_cam @ R_cam_palm @ R_x_90
+
+        # Compute right finger's rotation matrix: T^B_R = R_object_cam * R_cam_palm * R_z(90°) * R_y(90°)
+        right_finger_rotation = R_object_cam @ R_cam_palm @ R_z_minus_90 @ R_x_minus_90 
+
+        return right_finger_rotation,left_finger_rotation, R_object_palm
+    
+    def compute_obj_pos(self,object_pose_cam, palm_to_cam):
+        R_y_180=self.rotation_y(180)
+
+         # Extract rotation matrices from the transformation matrices
+        R_object_cam = object_pose_cam[:3, :3]  # Object pose rotation in the camera frame
+        R_palm_cam = R_y_180 @ palm_to_cam[:3, :3]       # Palm to camera rotation matrix
+        R_cam_palm = R_palm_cam.T               # Camera to palm rotation matrix
+        x_obj_cam=object_pose_cam[:3, 3]
+        x_palm_cam=palm_to_cam[:3, 3]
+
+
+        obj_pos_palm=R_cam_palm@(x_obj_cam-x_palm_cam)
+        return obj_pos_palm
+
 
 

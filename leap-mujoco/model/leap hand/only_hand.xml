@@ -17,7 +17,7 @@
   </asset>
 
   <worldbody>
-    <body name="palm" pos="0.2 0 0">
+    <body name="palm" pos="0 0 0">
     <geom name="palm" pos="-0.0200952 0.0257578 -0.0347224" type="mesh" rgba="0.603922 0.14902 0.14902 1" mesh="palm_lower"/>
     <body name="mcp_joint" pos="-0.00709525 0.0230578 -0.0187224" quat="0.5 0.5 0.5 -0.5">
       <joint name="1" pos="0 0 0" axis="0 0 -1" range="-0.314 2.23"/>

@@ -321,6 +321,18 @@ class GraspClass:
     def __init__(self):
         self.G_matrices=[]
         self.Jh_blocks=[]
+        self.index_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_index.xml'
+        self.index_m = mujoco.MjModel.from_xml_path(self.index_path)
+        self.index_d = mujoco.MjData(self.index_m)
+        self.middle_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_middle.xml'
+        self.middle_m = mujoco.MjModel.from_xml_path(self.middle_path)
+        self.middle_d = mujoco.MjData(self.middle_m)
+        self.ring_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_ring.xml'
+        self.ring_m = mujoco.MjModel.from_xml_path(self.ring_path)
+        self.ring_d = mujoco.MjData(self.ring_m)
+        self.thumb_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_thumb.xml'
+        self.thumb_m = mujoco.MjModel.from_xml_path(self.thumb_path)
+        self.thumb_d = mujoco.MjData(self.thumb_m)
         
     def G_i(self,contact_orientation, r_theta,b):
         matrix1 = contact_orientation
@@ -342,7 +354,20 @@ class GraspClass:
         G = np.hstack(self.G_matrices)
         return G
     
-    def J_p(self,model,data,site_name):
+    # def J_p(self,model,data,site_name):
+    #     mujoco.mj_forward(model, data)
+    #     jacp = np.zeros((3, model.nv))  # translation jacobian
+    #     jacr = np.zeros((3, model.nv)) 
+
+    #     site_id=model.site(site_name).id
+    #     mujoco.mj_jacSite(model, data, jacp, jacr, site_id)
+
+    #     return jacp
+    
+    def J(self,xml_path,site_name,qs):
+        model = mujoco.MjModel.from_xml_path(xml_path)
+        data = mujoco.MjData(model)
+        data.qpos=qs
         mujoco.mj_forward(model, data)
         jacp = np.zeros((3, model.nv))  # translation jacobian
         jacr = np.zeros((3, model.nv)) 
@@ -350,8 +375,8 @@ class GraspClass:
         site_id=model.site(site_name).id
         mujoco.mj_jacSite(model, data, jacp, jacr, site_id)
 
-        return jacp
-    
+        return np.vstack((jacp,jacr))
+
     def Jh(self,n,contact_orientations,Rpks,Js):
         for i in range(n):
             Jh_i=np.matmul(np.matmul(contact_orientations[i].T,Rpks[i]),Js[i])
@@ -440,6 +465,36 @@ class TransMatrix:
 
         obj_pos_palm=R_cam_palm@(x_obj_cam-x_palm_cam)
         return obj_pos_palm
+
+    def compute_contact_locations(self,object_pose_cam, palm_to_cam,bs):
+        R_y_180=self.rotation_y(180)
+
+         # Extract rotation matrices from the transformation matrices
+        R_object_cam = object_pose_cam[:3, :3]  # Object pose rotation in the camera frame
+        R_palm_cam = R_y_180 @ palm_to_cam[:3, :3]       # Palm to camera rotation matrix
+        R_cam_palm = R_palm_cam.T               # Camera to palm rotation matrix
+        x_obj_cam=object_pose_cam[:3, 3].reshape(3,1)
+        x_palm_cam=palm_to_cam[:3, 3].reshape(3,1)
+        obj_pos_palm=R_cam_palm@(x_obj_cam-x_palm_cam)
+
+        R_x_90 = self.rotation_x(90)
+        R_x_minus_90 = self.rotation_x(-90)
+        R_z_minus_90 = self.rotation_z(-90)
+        R_y_180=self.rotation_y(180)
+
+        # Extract rotation matrices from the transformation matrices
+        R_object_cam = object_pose_cam[:3, :3]  # Object pose rotation in the camera frame
+        R_palm_cam = R_y_180 @ palm_to_cam[:3, :3]       # Palm to camera rotation matrix
+        R_cam_palm = R_palm_cam.T               # Camera to palm rotation matrix
+
+        R_object_palm = R_object_cam @ R_cam_palm
+
+        contact1_pos=obj_pos_palm+(R_object_palm@bs[0])
+        contact2_pos=obj_pos_palm+(R_object_palm@bs[1])
+
+        return contact1_pos, contact2_pos
+        
+        
 
 
 

@@ -13,7 +13,8 @@ def receive_all(sock, length):
 
 
 def receive_array():
-    host = '10.0.58.25'  # or the IP of the producer if running on a different host
+   # host = '10.0.58.25'  # or the IP of the producer if running on a different host
+    host='10.7.40.192'
     port = 12345          # Port to connect to
     temp_file = '/tmp/received_array.pkl'  # File to store the received array
 

@@ -82,7 +82,7 @@ class LeapNode:
 def main(**kwargs):
     leap_hand = LeapNode()
     while True:
-        leap_hand.set_allegro(np.zeros(16))
+        leap_hand.set_allegro([-1.047, 0.45820198, -0.14510207, 1.79500449, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.85805109, -0.0020906, 1.21309556, -0.20481976])
         print("Position: " + str(leap_hand.read_pos()))
         time.sleep(0.03)
 

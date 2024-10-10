@@ -45,17 +45,17 @@ import numpy as np
 import time 
 from main_redundancy import GraspClass, TransMatrix, OnlyPosIK 
 
-grasp = GraspClass()
+# grasp = GraspClass()
 transmatrix = TransMatrix()
 
 index_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_index.xml'
-thumb_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_thumb.xml'
+# thumb_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_thumb.xml'
 
-invkin_index=OnlyPosIK(index_path)
-invkin_thumb=OnlyPosIK(thumb_path)
+# invkin_index=OnlyPosIK(index_path)
+# invkin_thumb=OnlyPosIK(thumb_path)
 
-n = 2
-palm_to_cam = np.array([[-0.01209287,  0.99825156,  0.05721033,  0.01685895],
+# n = 2
+palm_wrt_cam = np.array([[-0.01209287,  0.99825156,  0.05721033,  0.01685895],
                         [-0.84305334,  0.02058774, -0.53744149, -0.01142683],
                         [-0.53770053, -0.05473075,  0.84135842,  0.50268827],
                         [0.,  0.,  0.,  1.]])
@@ -64,41 +64,43 @@ b1 = np.array([[0],[0.027],[0]])
 b2 = np.array([[0],[-0.027],[0]])
 bs = [b1, b2]
 
-T_indexbase_palm=np.array([[0.        , 0.        , 1.        , 0.01309895],
-    [1.        , 0.        , 0.        , -0.0027],
-    [0.        , 1.        , 0.        , 0.016012  ],
-    [0.        , 0.        , 0.        , 1.        ]])
-T_palm_indexbase = np.linalg.inv(T_indexbase_palm)
+# T_indexbase_palm=np.array([[0.        , 0.        , 1.        , 0.01309895],
+#     [1.        , 0.        , 0.        , -0.0027],
+#     [0.        , 1.        , 0.        , 0.016012  ],
+#     [0.        , 0.        , 0.        , 1.        ]])
+# T_palm_indexbase = np.linalg.inv(T_indexbase_palm)
 
-T_thumbbase_palm=np.array([[0.        , 0.        , 1.        , -0.0493],
-    [0.        , 1.        , 0.        , -0.0027],
-    [-1.        , 0.        , 0.        , 0.0131  ],
-    [0.        , 0.        , 0.        , 1.        ]])
+# T_thumbbase_palm=np.array([[0.        , 0.        , 1.        , -0.0493],
+#     [0.        , 1.        , 0.        , -0.0027],
+#     [-1.        , 0.        , 0.        , 0.0131  ],
+#     [0.        , 0.        , 0.        , 1.        ]])
 
-Rpk_index=T_indexbase_palm[:3,:3]
-Rpk_thumb=T_thumbbase_palm[:3,:3]
+# Rpk_index=T_indexbase_palm[:3,:3]
+# Rpk_thumb=T_thumbbase_palm[:3,:3]
 
 def f(array):
     object_pose_cam = array
     #print(object_pose_cam)
 
-    contact1_orient, contact2_orient, r_theta = transmatrix.compute_finger_rotations(object_pose_cam, palm_to_cam)
-    contact1_pos,contact2_pos=transmatrix.compute_contact_locations(object_pose_cam, palm_to_cam,bs)
+    # contact1_orient, contact2_orient, r_theta = transmatrix.compute_finger_rotations(object_pose_cam, palm_to_cam)
+    # contact1_pos,contact2_pos=transmatrix.compute_contact_locations(object_pose_cam, palm_to_cam,bs)
 
-    qs1=[0.5,0,0.5,0.5]
-    qs2=[0.5,0,0.5,0.5]
+    # qs1=[0.5,0,0.5,0.5]
+    # qs2=[0.5,0,0.5,0.5]
 
-    J1 = grasp.J(grasp.index_path,'contact_index',qs1)
-    J2 = grasp.J(grasp.thumb_path,'contact_thumb',qs2)
+    # J1 = grasp.J(grasp.index_path,'contact_index',qs1)
+    # J2 = grasp.J(grasp.thumb_path,'contact_thumb',qs2)
 
-    contact_orientations = [contact1_orient, contact2_orient]
-    Rpks = [Rpk_index, Rpk_thumb]
-    Js = [J1, J2]
+    # contact_orientations = [contact1_orient, contact2_orient]
+    # Rpks = [Rpk_index, Rpk_thumb]
+    # Js = [J1, J2]
 
-    pos = transmatrix.compute_obj_pos(object_pose_cam, palm_to_cam)
-    print("Object position:", pos)
+    pos_hardware_frame = transmatrix.compute_obj_pos(object_pose_cam, palm_wrt_cam)
+    print("Object position:", pos_hardware_frame)
 
-    # print('contact',contact1_pos)
+    contact_pos_hardware=transmatrix.compute_contact_locations(object_pose_cam, palm_wrt_cam,bs)
+
+    print('contact_thumb',contact_pos_hardware[0])
     # goal_pos_index_hom=T_palm_indexbase@np.append(contact1_pos,1)
     # goal_pos_index=goal_pos_index_hom[:3]
     
@@ -128,7 +130,7 @@ def load_and_compute(filename):
                     print("Array has not changed. Waiting for updates...")
 
             # Sleep for a short duration before checking again
-            time.sleep(2)  # Adjust the sleep duration as needed
+            time.sleep(1)  # Adjust the sleep duration as needed
 
         except FileNotFoundError:
             print(f"File '{filename}' not found. Make sure the file exists.")

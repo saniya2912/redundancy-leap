@@ -321,18 +321,18 @@ class GraspClass:
     def __init__(self):
         self.G_matrices=[]
         self.Jh_blocks=[]
-        self.index_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_index.xml'
-        self.index_m = mujoco.MjModel.from_xml_path(self.index_path)
-        self.index_d = mujoco.MjData(self.index_m)
-        self.middle_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_middle.xml'
-        self.middle_m = mujoco.MjModel.from_xml_path(self.middle_path)
-        self.middle_d = mujoco.MjData(self.middle_m)
-        self.ring_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_ring.xml'
-        self.ring_m = mujoco.MjModel.from_xml_path(self.ring_path)
-        self.ring_d = mujoco.MjData(self.ring_m)
-        self.thumb_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_thumb.xml'
-        self.thumb_m = mujoco.MjModel.from_xml_path(self.thumb_path)
-        self.thumb_d = mujoco.MjData(self.thumb_m)
+        # self.index_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_index.xml'
+        # self.index_m = mujoco.MjModel.from_xml_path(self.index_path)
+        # self.index_d = mujoco.MjData(self.index_m)
+        # self.middle_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_middle.xml'
+        # self.middle_m = mujoco.MjModel.from_xml_path(self.middle_path)
+        # self.middle_d = mujoco.MjData(self.middle_m)
+        # self.ring_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_ring.xml'
+        # self.ring_m = mujoco.MjModel.from_xml_path(self.ring_path)
+        # self.ring_d = mujoco.MjData(self.ring_m)
+        # self.thumb_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_thumb.xml'
+        # self.thumb_m = mujoco.MjModel.from_xml_path(self.thumb_path)
+        # self.thumb_d = mujoco.MjData(self.thumb_m)
         
     def G_i(self,contact_orientation, r_theta,b):
         matrix1 = contact_orientation
@@ -452,49 +452,130 @@ class TransMatrix:
 
         return right_finger_rotation,left_finger_rotation, R_object_palm
     
-    def compute_obj_pos(self,object_pose_cam, palm_to_cam):
-        R_y_180=self.rotation_y(180)
+    def compute_obj_pos(self,object_pose_cam, palm_wrt_cam):
+        #R_y_180=self.rotation_y(180)
 
          # Extract rotation matrices from the transformation matrices
         R_object_cam = object_pose_cam[:3, :3]  # Object pose rotation in the camera frame
-        R_palm_cam = R_y_180 @ palm_to_cam[:3, :3]       # Palm to camera rotation matrix
+        R_palm_cam = palm_wrt_cam[:3, :3]       # Palm to camera rotation matrix
         R_cam_palm = R_palm_cam.T               # Camera to palm rotation matrix
         x_obj_cam=object_pose_cam[:3, 3]
-        x_palm_cam=palm_to_cam[:3, 3]
+        x_palm_cam=palm_wrt_cam[:3, 3]
 
 
         obj_pos_palm=R_cam_palm@(x_obj_cam-x_palm_cam)
         return obj_pos_palm
 
-    def compute_contact_locations(self,object_pose_cam, palm_to_cam,bs):
-        R_y_180=self.rotation_y(180)
-
-         # Extract rotation matrices from the transformation matrices
-        R_object_cam = object_pose_cam[:3, :3]  # Object pose rotation in the camera frame
-        R_palm_cam = R_y_180 @ palm_to_cam[:3, :3]       # Palm to camera rotation matrix
-        R_cam_palm = R_palm_cam.T               # Camera to palm rotation matrix
-        x_obj_cam=object_pose_cam[:3, 3].reshape(3,1)
-        x_palm_cam=palm_to_cam[:3, 3].reshape(3,1)
-        obj_pos_palm=R_cam_palm@(x_obj_cam-x_palm_cam)
-
-        R_x_90 = self.rotation_x(90)
-        R_x_minus_90 = self.rotation_x(-90)
-        R_z_minus_90 = self.rotation_z(-90)
-        R_y_180=self.rotation_y(180)
+    def compute_contact_locations(self,object_pose_cam, palm_wrt_cam,bs):
+        
+        obj_pos_palm=self.compute_obj_pos(object_pose_cam, palm_wrt_cam)
 
         # Extract rotation matrices from the transformation matrices
         R_object_cam = object_pose_cam[:3, :3]  # Object pose rotation in the camera frame
-        R_palm_cam = R_y_180 @ palm_to_cam[:3, :3]       # Palm to camera rotation matrix
+        R_palm_cam = palm_wrt_cam[:3, :3]       # Palm to camera rotation matrix
         R_cam_palm = R_palm_cam.T               # Camera to palm rotation matrix
 
         R_object_palm = R_object_cam @ R_cam_palm
 
-        contact1_pos=obj_pos_palm+(R_object_palm@bs[0])
-        contact2_pos=obj_pos_palm+(R_object_palm@bs[1])
+
+        contact1_pos=(obj_pos_palm.reshape(3,1)+np.dot(R_object_palm,bs[0])).reshape(3,)
+        contact2_pos=(obj_pos_palm.reshape(3,1)+np.dot(R_object_palm,bs[1])).reshape(3,)
 
         return contact1_pos, contact2_pos
         
+
+class convert_to_mujoco:
+    def __init__(self,palm_wrt_cam):
+        # self.T_indexbase_palm=np.array([[0.        , 0.        , 1.        , 0.01309895],
+        #                                 [1.        , 0.        , 0.        , -0.0027],
+        #                                 [0.        , 1.        , 0.        , 0.016012  ],
+        #                                 [0.        , 0.        , 0.        , 1.        ]])
+        # self.T_thumbbase_palm=np.array([[0.        , 0.        , 1.        , -0.0493],
+        #                                 [0.        , 1.        , 0.        , -0.0027],
+        #                                 [-1.        , 0.        , 0.        , 0.0131  ],
+        #                                 [0.        , 0.        , 0.        , 1.        ]])
+        
+        self.T_preal_pbm=np.array([[0, 0, -1, -0.0200952],
+                                  [-1, 0, 0, 0.0257578],
+                                  [0, 1, 0, -0.0347224],
+                                  [0, 0, 0, 1]])
+
+        self.T_pbm_preal=np.array([[0.        , -1.        , 0        , 0.0257578],
+                                        [0        , 0.        , 1.        , 0.0347224],
+                                        [-1.        , 0.        , 0.        , -0.0200952  ],
+                                        [0.        , 0.        , 0.        , 1.        ]])
+        self.palm_wrt_cam=palm_wrt_cam
         
 
+    def rotation_x(self,theta):
+        """
+        Returns the rotation matrix for a rotation about the X-axis by an angle theta (in degrees).
+        """
+        radians = np.radians(theta)
+        cos_theta = np.cos(radians)
+        sin_theta = np.sin(radians)
+        
+        R_x = np.array([[1, 0, 0],
+                        [0, cos_theta, -sin_theta],
+                        [0, sin_theta, cos_theta]])
+        
+        return R_x
 
+    # Define rotation matrix for rotation around the Y-axis
+    def rotation_y(self,theta):
+        """
+        Returns the rotation matrix for a rotation about the Y-axis by an angle theta (in degrees).
+        """
+        radians = np.radians(theta)
+        cos_theta = np.cos(radians)
+        sin_theta = np.sin(radians)
+        
+        R_y = np.array([[cos_theta, 0, sin_theta],
+                        [0, 1, 0],
+                        [-sin_theta, 0, cos_theta]])
+        
+        return R_y
+
+    # Define rotation matrix for rotation around the Z-axis
+    def rotation_z(self,theta):
+        """
+        Returns the rotation matrix for a rotation about the Z-axis by an angle theta (in degrees).
+        """
+        radians = np.radians(theta)
+        cos_theta = np.cos(radians)
+        sin_theta = np.sin(radians)
+        
+        R_z = np.array([[cos_theta, -sin_theta, 0],
+                        [sin_theta, cos_theta, 0],
+                        [0, 0, 1]])
+        
+        return R_z
+    
+    # def palm_rotated(self,palm_frame):
+    #     palm_rotated=self.rotation_y(180)@palm_frame
+    #     return palm_rotated
+
+    # def pos_mujoco(self,pos):
+    #     pos_mujoco=np.dot(self.rotation_y(180),pos)
+    #     return pos_mujoco
+
+    # def pos_mujocopalmbody(self, pos): #converts object_pos-palmreal in camera frame input is obj_pos wrt ca
+    # # Convert the 3D pos vector to homogeneous coordinates by adding a 1
+    #     pos_homogeneous = np.append(pos, 1)
+        
+    #     # Perform the matrix multiplication
+    #     pos_palmbody = np.dot(self.T_pbm_preal, pos_homogeneous)
+    #     pos_palmbody_cam=np.dot(self.palm_wrt_cam[:3,:3],pos_palmbody[:3])
+        
+    #     # Return the first three elements (x, y, z) of the result
+    #     return pos_palmbody_cam
+    
+    def x_pbm_preal_c(self): #in camera frame
+        x_pbm_preal=self.T_pbm_preal[:3,3]
+        return np.dot(self.palm_wrt_cam[:3,:3],x_pbm_preal)
+
+    # def pos_index_base_mujoco(self,pos):
+    #     obj_palm=pos
+    #     index_base_palm=self.T_indexbase_palm[:3,3]
+    #     return obj_palm-index_base_palm
 

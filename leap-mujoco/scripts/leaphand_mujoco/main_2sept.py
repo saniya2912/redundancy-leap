@@ -5,7 +5,7 @@ import mujoco.viewer
 import sys
 import mediapy as media
 import matplotlib.pyplot as plt
-import PyKDL as kdl
+
 from urdf_parser_py.urdf import URDF
 import numpy as np
 from scipy.linalg import block_diag
@@ -234,95 +234,3 @@ class GraspClass:
             self.Jh_blocks.append(Jh_i)
         return block_diag(*self.Jh_blocks)
     
-class LeapHandKinematics:
-    def __init__(self, urdf_path):
-        self.urdf_model = URDF.from_xml_file(urdf_path)
-        self.base_link = 'palm_lower'
-
-    def find_joint_for_link(self, child_link_name):
-        """Find the joint in the URDF model that connects to the given child link."""
-        for joint in self.urdf_model.joints:
-            if joint.child == child_link_name:
-                return joint
-        return None
-
-    def add_joint_to_chain(self, chain, joint):
-        if joint.type == 'revolute' or joint.type == 'continuous':
-            kdl_joint = kdl.Joint(
-                joint.name,
-                kdl.Vector(joint.origin.xyz[0], joint.origin.xyz[1], joint.origin.xyz[2]),
-                kdl.Vector(joint.axis[0], joint.axis[1], joint.axis[2]),
-                kdl.Joint.RotAxis
-            )
-        elif joint.type == 'fixed':
-            kdl_joint = kdl.Joint(joint.name, kdl.Joint.Fixed)
-        else:
-            print(f"Unsupported joint type: {joint.type}")
-            return False
-
-        kdl_segment = kdl.Segment(joint.child, kdl_joint, kdl.Frame())
-        chain.addSegment(kdl_segment)
-        return True
-
-    def create_kdl_chain(self, end_link):
-        chain = kdl.Chain()
-        current_link = end_link
-
-        while current_link != self.base_link:
-            joint = self.find_joint_for_link(current_link)
-            if not joint:
-                print(f"Joint for link {current_link} not found!")
-                return None
-            if not self.add_joint_to_chain(chain, joint):
-                print(f"Failed to add joint {joint.name} to chain")
-                return None
-            current_link = joint.parent
-
-        return chain
-
-    def perform_fk(self, end_link, joint_positions):
-        chain = self.create_kdl_chain(end_link)
-        if not chain or chain.getNrOfSegments() == 0:
-            raise RuntimeError(f"Chain for {end_link} could not be created.")
-
-        fk_solver = kdl.ChainFkSolverPos_recursive(chain)
-        end_effector_frame = kdl.Frame()
-        print(f"Calculating FK for joint positions: {[joint_positions[i] for i in range(joint_positions.rows())]}")
-        result = fk_solver.JntToCart(joint_positions, end_effector_frame)
-
-        if result >= 0:
-            return end_effector_frame
-        else:
-            raise RuntimeError("FK solver failed")
-
-    def perform_ik(self, end_link, target_frame):
-        chain = self.create_kdl_chain(end_link)
-        if not chain or chain.getNrOfSegments() == 0:
-            raise RuntimeError(f"Chain for {end_link} could not be created.")
-
-        num_joints = chain.getNrOfJoints()
-        joint_positions = kdl.JntArray(num_joints)
-        ik_solver = kdl.ChainIkSolverPos_LMA(chain)
-
-        initial_positions = kdl.JntArray(num_joints)  # Start with zero positions
-        result = ik_solver.CartToJnt(initial_positions, target_frame, joint_positions)
-
-        if result >= 0:
-            return [joint_positions[i] for i in range(num_joints)]
-        else:
-            raise RuntimeError("IK solver failed")
-
-    def compute_jacobian(self, end_link, joint_positions):
-        chain = self.create_kdl_chain(end_link)
-        if not chain or chain.getNrOfSegments() == 0:
-            raise RuntimeError(f"Chain for {end_link} could not be created.")
-
-        jacobian = kdl.Jacobian(chain.getNrOfJoints())
-        jnt_to_jac_solver = kdl.ChainJntToJacSolver(chain)
-
-        result = jnt_to_jac_solver.JntToJac(joint_positions, jacobian)
-
-        if result >= 0:
-            return jacobian
-        else:
-            raise RuntimeError("Jacobian computation failed")

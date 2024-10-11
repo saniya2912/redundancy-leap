@@ -5,7 +5,7 @@ from main import LeapNode
 import time
 # grasp = GraspClass()
 transmatrix = TransMatrix()
-leap=LeapNode()
+# leap=LeapNode()
 
 
 index_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/index_finger.xml'
@@ -25,10 +25,10 @@ T_thumbbase_palm=np.array([[0.        , 0.        , 1.        , -0.0493],
     [-1.        , 0.        , 0.        , 0.0131  ],
     [0.        , 0.        , 0.        , 1.        ]])
 # n = 2
-palm_wrt_cam = np.array([[ 0.00830085,  0.97722858,  0.21201584,  0.04431465],
-                   [-0.87423253,  0.11001977, -0.47287837,  0.04389239],
-                   [-0.48543799, -0.18142588,  0.85524017,  0.5071725 ],
-                   [ 0.        ,  0.        ,  0.        ,  1.        ]])
+palm_wrt_cam = np.array([[-0.01255732,  0.97356176,  0.22806171,  0.04361352],
+                   [-0.87234324,  0.1008127,  -0.47838551,  0.04156835],
+                   [-0.48873109, -0.2049571,   0.84801656,  0.499567],
+                   [ 0.,          0.,          0.,          1.        ]])
 
 mujoco_convert=convert_to_mujoco(palm_wrt_cam)
 
@@ -43,9 +43,11 @@ def f(array):
     obj_pos=transmatrix.compute_obj_pos(object_pose_cam, palm_wrt_cam) #object position with respect to palm camera frame
     print('obj_pos',obj_pos)
 
-    #convert to mujoco requirements
-    v3=palm_wrt_cam[:3,3]+mujoco_convert.x_pbm_preal_c()-object_pose_cam[:3,3]
-    x_obj_pbm=np.dot(np.dot(palm_wrt_cam[:3,:3].T,mujoco_convert.T_pbm_preal[:3,:3].T),-v3)
+    # #convert to mujoco requirements
+    # v3=palm_wrt_cam[:3,3]+mujoco_convert.x_pbm_preal_c()-object_pose_cam[:3,3]
+    # x_obj_pbm=np.dot(np.dot(palm_wrt_cam[:3,:3].T,mujoco_convert.T_pbm_preal[:3,:3].T),-v3)
+
+    x_obj_pbm=mujoco_convert.obj_pbm_from_preal(obj_pos)
 
     
     
@@ -53,15 +55,15 @@ def f(array):
 
     # obj_pos_mujoco=np.array([0,0,-0.1])
     
-    qs1=pos_ik_index.calculate(x_obj_pbm,'contact_index')
-    qs2=pos_ik_thumb.calculate(x_obj_pbm,'contact_thumb')
-    qs1_real=qs1
-    qs2_real=qs2
-    qs1_real[0],qs1_real[1]=qs1_real[1],qs1_real[0]
-    qs=np.concatenate([qs1_real,np.zeros(8),qs2_real])
-    print(qs)
-    while True:
-        leap.set_allegro(qs)
+    # qs1=pos_ik_index.calculate(x_obj_pbm,'contact_index')
+    # qs2=pos_ik_thumb.calculate(x_obj_pbm,'contact_thumb')
+    # qs1_real=qs1
+    # qs2_real=qs2
+    # qs1_real[0],qs1_real[1]=qs1_real[1],qs1_real[0]
+    # qs=np.concatenate([qs1_real,np.zeros(8),qs2_real])
+    # print(qs)
+    # while True:
+    #     leap.set_allegro(qs)
 
 def load_and_compute(filename):
     """
@@ -93,4 +95,6 @@ if __name__ == "__main__":
     # while True:
     #     load_and_compute(filename)
     #     time.sleep(1)
-    load_and_compute(filename)
+    while True:
+        load_and_compute(filename)
+        time.sleep(1)

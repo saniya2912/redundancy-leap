@@ -495,15 +495,25 @@ class convert_to_mujoco:
         #                                 [-1.        , 0.        , 0.        , 0.0131  ],
         #                                 [0.        , 0.        , 0.        , 1.        ]])
         
-        self.T_preal_pbm=np.array([[0, 0, -1, -0.0200952],
-                                  [-1, 0, 0, 0.0257578],
-                                  [0, 1, 0, -0.0347224],
+        # self.T_preal_pbm=np.array([[0, 0, -1, -0.0200952], 
+        #                           [-1, 0, 0, 0.0257578],
+        #                           [0, 1, 0, -0.0347224],
+        #                           [0, 0, 0, 1]])
+
+        # self.T_pbm_preal=np.array([[0.        , -1.        , 0        , 0.0257578],    
+        #                                 [0        , 0.        , 1.        , 0.0347224],
+        #                                 [-1.        , 0.        , 0.        , -0.0200952  ],
+        #                                 [0.        , 0.        , 0.        , 1.        ]])
+        self.T_preal_pbm=np.array([[0, -1, 0, -0.0200952], 
+                                  [0, 0, 1, 0.0257578],
+                                  [-1, 0, 0, -0.0347224],
                                   [0, 0, 0, 1]])
 
-        self.T_pbm_preal=np.array([[0.        , -1.        , 0        , 0.0257578],
-                                        [0        , 0.        , 1.        , 0.0347224],
-                                        [-1.        , 0.        , 0.        , -0.0200952  ],
-                                        [0.        , 0.        , 0.        , 1.        ]])
+        self.T_pbm_preal=np.array([[-0.       , -0.       , -1.       , -0.0347224],
+       [-1.       , -0.       , -0.       , -0.0200952],
+       [ 0.       ,  1.       ,  0.       , -0.0257578],
+       [ 0.       ,  0.       ,  0.       ,  1.       ]])
+
         self.palm_wrt_cam=palm_wrt_cam
         
 
@@ -569,6 +579,10 @@ class convert_to_mujoco:
         
     #     # Return the first three elements (x, y, z) of the result
     #     return pos_palmbody_cam
+
+    def obj_pbm_from_preal(self,obj_wrt_preal):
+        v2=obj_wrt_preal-self.T_pbm_preal[:3,3]
+        return np.dot(self.T_preal_pbm[:3,:3],v2)
     
     def x_pbm_preal_c(self): #in camera frame
         x_pbm_preal=self.T_pbm_preal[:3,3]

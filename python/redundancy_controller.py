@@ -1,11 +1,11 @@
 import pickle
 import numpy as np
-from main_redundancy import GraspClass, TransMatrix, OnlyPosIK, convert_to_mujoco
-from main import LeapNode
+from main_redundancy import GraspClass, TransMatrix, OnlyPosIK, PosRot, LeapNode_Taucontrol, LeapNode_Poscontrol
+
 import time
 # grasp = GraspClass()
 transmatrix = TransMatrix()
-leap=LeapNode()
+
 
 
 index_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_index.xml'
@@ -14,31 +14,58 @@ thumb_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redund
 pos_ik_index=OnlyPosIK(index_path)
 pos_ik_thumb=OnlyPosIK(thumb_path)
 
-T_indexbase_palm=np.array([[0.        , 0.        , 1.        , 0.01309895],
-    [1.        , 0.        , 0.        , -0.0027],
-    [0.        , 1.        , 0.        , 0.016012  ],
-    [0.        , 0.        , 0.        , 1.        ]])
-T_palm_indexbase = np.linalg.inv(T_indexbase_palm)
+T_indexbase_palm=np.array([[ 0.        ,  1.        ,  0.        ,  0.03811195],
+       [ 0.        ,  0.        , -1.        ,  0.060044  ],
+       [-1.        ,  0.        ,  0.        , -0.007246  ],
+       [ 0.        ,  0.        ,  0.        ,  1.        ]])
+Rpk_index=T_indexbase_palm[:3,:3]
 
-T_thumbbase_palm=np.array([[0.        , 0.        , 1.        , -0.0493],
-    [0.        , 1.        , 0.        , -0.0027],
-    [-1.        , 0.        , 0.        , 0.0131  ],
-    [0.        , 0.        , 0.        , 1.        ]])
-# n = 2
-palm_wrt_cam = np.array([[-0.00983316,  0.9754554,   0.21997406,  0.04329155],
-                   [-0.87080985,  0.09977933, -0.48138833,  0.04186791],
-                   [-0.49152228, -0.19628921,  0.84845501,  0.49930922],
-                   [ 0.        ,  0.        ,  0.        ,  1.        ]])
+T_thumbbase_palm=np.array([[0, 0, 1, -0.024188],
+              [0, 1, 0, 0.03574396],
+              [-1, 0, 0, -0.010146],
+              [0, 0, 0, 1]])
+Rpk_thumb=T_thumbbase_palm[:3,:3]
 
-mujoco_convert=convert_to_mujoco(palm_wrt_cam)
+Rpks=[Rpk_index,Rpk_thumb]
+n = 2
+palm_wrt_cam = np.array([[-0.01388162,  0.98129904,  0.19198282,  0.03377598],
+              [-0.87071609,  0.08253191, -0.48481306,  0.04381788],
+              [-0.49159166, -0.17389219,  0.85328728,  0.49460942],
+              [ 0.,  0.,  0.,  1.]])
+
+
 
 
 b1 = np.array([[0],[-0.027],[0]])
 b2 = np.array([[0],[0.027],[0]])
 bs = [b1, b2]
 
+grasp = GraspClass()
 
-def f(array):
+def initialize(filename):
+    try:
+        with open(filename, 'rb') as file:  # Changed the variable name to 'file' to avoid conflicts
+            print(f"Type of file: {type(file)}")  # Check if file is properly opened
+            print("Attempting to load array from file...")
+
+            array = pickle.load(file)  # Ensure this is using the correct `pickle.load` method
+            #print("Loaded array:", array)
+
+            # Compute f(array)
+            result = transmatrix.T_obj_palm(np.array(array),palm_wrt_cam)
+            #print("Result of computation:", result)
+            
+
+    except FileNotFoundError:
+        print(f"File '{filename}' not found. Make sure the file exists.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+    return result
+    # array=np.random.rand(4,4)
+    # f(np.array(array))
+
+def f(array,Td):
     object_pose_cam=array
     obj_pos=transmatrix.compute_obj_pos(object_pose_cam, palm_wrt_cam) #object position with respect to palm camera frame
     print('obj_pos',obj_pos)
@@ -65,12 +92,80 @@ def f(array):
     qs2_real=qs2
     qs1_real[0],qs1_real[1]=qs1_real[1],qs1_real[0]
     qs=np.concatenate([qs1_real,np.zeros(8),qs2_real])
+    leap_pos=LeapNode_Poscontrol()
     # print(qs)
     while time <4:
-        leap.set_allegro(qs)
+        leap_pos.set_allegro(qs)
+
+    n = 2
+    contactrot_index,contactrot_thumb,r_theta=transmatrix.compute_finger_rotations(object_pose_cam,palm_wrt_cam)
+    contact_orientations=[contactrot_index,contactrot_thumb]
+    
+    #from mujoco xml filif __name__ == "__main__":
+    J_index=grasp.J(index_path,'contact_index',qs1)
+    J_thumb=grasp.J(thumb_path,'contact_thumb',qs2)
+    Js=[J_index,J_thumb]
+    
+    Rpks = [Rpk_index, Rpk_thumb]
+    
+    bs = [b1, b2]
+
+    # Compute the grasp matrices
+    Jh_ = grasp.Jh_full(n, contact_orientations, Rpks, Js)
+    G_ = grasp.G_full(n, contact_orientations, r_theta, bs)
+
+    H=grasp.selection_matrix(n,'SF')
+
+    Jh_leap=H@Jh_
+    G_leap_T=H@G_.T
+    G_leap=G_leap_T.T
+
+    # Controller parameters
+    Kp_d = 0.1*np.eye(6)
+    Kp_k = 1
+
+    n0 = 1000*np.ones([8,1])
+    I = np.eye(8)
+    phi_d = np.ones([8,1])
+
+#leap_hand = LeapNode_Taucontrol()
+
+# Main control loop
+   
+
+    posrot=PosRot()
+    T=transmatrix.T_obj_palm(object_pose_cam,palm_wrt_cam)
+
+    q_final=posrot.q_subs(Td,T)
+
+    # Compute forces
+    Fimp = np.dot(np.linalg.pinv(G_leap),np.dot(Kp_d , (q_final.reshape(6,1))))
+    Fnull = (I - np.matmul(np.linalg.pinv(G_leap), G_leap)) @ n0
+    
+    # Compute desired torque
+    Tau_dy = Jh_leap.T @ (Fimp + Fnull)
+    
+    
+    
+    # Read position from the Leap hand
+    #phi = leap_hand.read_pos()
+    phi=np.ones([8,1])
+    
+    # Kinematic control torque
+    Tau_kin = Kp_k * (phi_d - phi)  # Corrected this line
+    
+    # Total torque
+    Tau = Tau_dy + Tau_kin*0
+    Tau_real=Tau
+
+    Tau_real[0],Tau_real[1]=Tau_real[1],Tau_real[0]
+
+    leap_hand=LeapNode_Taucontrol()
+    while time>4 and time<10:
+        leap_hand.set_desired_torque(Tau_real)
     
 
-def load_and_compute(filename):
+def load_and_compute(filename,Td):
     """
     # Load the array from a pickle file and compute f(array).
     # """
@@ -83,7 +178,7 @@ def load_and_compute(filename):
             #print("Loaded array:", array)
 
             # Compute f(array)
-            result = f(np.array(array))
+            result = f(np.array(array),Td)
             #print("Result of computation:", result)
 
     except FileNotFoundError:
@@ -100,6 +195,6 @@ if __name__ == "__main__":
     # while True:
     #     load_and_compute(filename)
     #     time.sleep(1)
-    
-    load_and_compute(filename)
+    Td=initialize(filename)
+    load_and_compute(filename,Td)
     

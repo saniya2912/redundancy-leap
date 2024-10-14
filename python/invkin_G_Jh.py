@@ -1,6 +1,6 @@
 import pickle
 import numpy as np
-from main_redundancy import GraspClass, TransMatrix, OnlyPosIK, convert_to_mujoco
+from main_redundancy import GraspClass, TransMatrix, OnlyPosIK
 from main import LeapNode
 import time
 import pandas as pd 

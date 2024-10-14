@@ -3,6 +3,7 @@ import numpy as np
 from leap_hand_utils.dynamixel_client import *
 import leap_hand_utils.leap_hand_utils as lhu
 import time
+from scipy.spatial.transform import Rotation as R
 #######################################################
 """This can control and query the LEAP Hand
 
@@ -555,6 +556,10 @@ class TransMatrix:
         contact2_pos=(obj_pos_palm.reshape(3,1)+np.dot(R_object_palm,bs[1])).reshape(3)
 
         return contact1_pos, contact2_pos
+    
+    def T_obj_palm(self,object_pose_cam, palm_wrt_cam):
+        cam_wrt_palm=np.linalg.inv(palm_wrt_cam)
+        return np.dot(object_pose_cam, cam_wrt_palm)
         
 
 class convert_to_mujoco:
@@ -762,6 +767,59 @@ class OnlyPosIK:
         
         result = self.data.qpos.copy()
         return result
+    
+class PosRot:
+    def quaternion_multiply(self, q1, q2):
+    # Extract quaternion components from Rotation objects
+        q1 = q1.as_quat()  # [x1, y1, z1, w1]
+        q2 = q2.as_quat()  # [x2, y2, z2, w2]
+        
+        x1, y1, z1, w1 = q1
+        x2, y2, z2, w2 = q2
+        
+        # Perform quaternion multiplication
+        w = w1*w2 - x1*x2 - y1*y2 - z1*z2
+        x = w1*x2 + x1*w2 + y1*z2 - z1*y2
+        y = w1*y2 - x1*z2 + y1*w2 + z1*x2
+        z = w1*z2 + x1*y2 - y1*x2 + z1*w2
+        
+        # Return the result as a new Rotation object
+        return R.from_quat([x, y, z, w])
+
+
+    def quaternion_inverse(self, q):
+        # Extract quaternion components as an array [x, y, z, w]
+        quat = q.as_quat()  # Extract [x, y, z, w] from Rotation object
+        x, y, z, w = quat  # Unpack the quaternion
+        # Return the inverse of the quaternion
+        return R.from_quat([x, -y, -z, -w])
+
+
+    def q_subs(self, Td,T ):
+        # Get positions
+        pos1=Td[:3,3]
+        pos2=T[:3,3]
+        pos=Td-T
+        
+        # Get quaternions from MuJoCo data (assuming they are in [x, y, z, w] format)
+        mat1 = Td[:3,:3]
+        mat2 = T[:3,:3]
+        
+        # Create Rotation objects from quaternions
+        quat1_rot = R.from_matrix(mat1)  # Convert to Rotation object
+        quat2_rot = R.from_matrix(mat2)  # Convert to Rotation object
+        
+        # Invert quat2 and multiply with quat1
+        quat2_rot_inv = self.quaternion_inverse(quat2_rot)  # Invert quaternion
+        relative_rot = self.quaternion_multiply(quat1_rot, quat2_rot_inv)  # Multiply
+        
+        # Convert the relative rotation to Euler angles
+        euler = relative_rot.as_euler('xyz', degrees=False)
+        
+        # Stack position and Euler angles into one array
+        q_final = np.hstack((pos, euler))
+        
+        return q_final
 
     # def palm_rotated(self,palm_frame):
     #     palm_rotated=self.rotation_y(180)@palm_frame

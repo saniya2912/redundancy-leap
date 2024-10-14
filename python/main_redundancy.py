@@ -317,22 +317,11 @@ import numpy as np
 from scipy.linalg import block_diag
 import mujoco
 
-class GraspClass:
+class GraspClass2:
     def __init__(self):
         self.G_matrices=[]
         self.Jh_blocks=[]
-        # self.index_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_index.xml'
-        # self.index_m = mujoco.MjModel.from_xml_path(self.index_path)
-        # self.index_d = mujoco.MjData(self.index_m)
-        # self.middle_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_middle.xml'
-        # self.middle_m = mujoco.MjModel.from_xml_path(self.middle_path)
-        # self.middle_d = mujoco.MjData(self.middle_m)
-        # self.ring_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_ring.xml'
-        # self.ring_m = mujoco.MjModel.from_xml_path(self.ring_path)
-        # self.ring_d = mujoco.MjData(self.ring_m)
-        # self.thumb_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_thumb.xml'
-        # self.thumb_m = mujoco.MjModel.from_xml_path(self.thumb_path)
-        # self.thumb_d = mujoco.MjData(self.thumb_m)
+        
         
     def G_i(self,contact_orientation, r_theta,b):
         matrix1 = contact_orientation
@@ -375,7 +364,8 @@ class GraspClass:
         site_id=model.site(site_name).id
         mujoco.mj_jacSite(model, data, jacp, jacr, site_id)
 
-        return np.vstack((jacp,jacr))
+        # return np.vstack((jacp,jacr))
+        return jacp
 
     def Jh(self,n,contact_orientations,Rpks,Js):
         for i in range(n):
@@ -383,6 +373,84 @@ class GraspClass:
             self.Jh_blocks.append(Jh_i)
         return block_diag(*self.Jh_blocks)    
     
+
+class GraspClass:
+    def __init__(self):
+        self.G_matrices=[]
+        self.Jh_blocks=[]
+    
+        
+    def G_i(self,contact_orientation, r_theta,b):
+        zero=np.zeros((3,1))
+        matrix1 = np.hstack((contact_orientation, zero,zero,zero)) 
+        r_theta_b = np.dot(r_theta,b)  # Matrix multiplication
+        
+        matrix2 = np.array([np.cross(r_theta_b.flatten(), contact_orientation[:, 0].flatten()),
+                        np.cross(r_theta_b.flatten(), contact_orientation[:, 1].flatten()),
+                        np.cross(r_theta_b.flatten(), contact_orientation[:, 2].flatten())])
+
+    # Add one more row to matrix2 to match the shape of matrix1
+        matrix2 = np.hstack([matrix2, contact_orientation[:, 0].reshape(3,1),contact_orientation[:, 1].reshape(3,1),contact_orientation[:, 2].reshape(3,1)]) 
+        
+        return np.vstack([matrix1, matrix2])
+
+
+    def G_full(self,n,contact_orientations, r_theta,bs):
+        for i in range(n):
+            G_i_matrix = self.G_i(contact_orientations[i],r_theta,bs[i])
+            self.G_matrices.append(G_i_matrix)
+
+        # Concatenate all G_i matrices horizontally to form G
+        G = np.hstack(self.G_matrices)
+        return G
+    
+    # def J_p(self,model,data,site_name):
+    #     mujoco.mj_forward(model, data)
+    #     jacp = np.zeros((3, model.nv))  # translation jacobian
+    #     jacr = np.zeros((3, model.nv)) 
+
+    #     site_id=model.site(site_name).id
+    #     mujoco.mj_jacSite(model, data, jacp, jacr, site_id)
+
+    #     return jacp
+    
+    def J(self,xml_path,site_name,qs):
+        model = mujoco.MjModel.from_xml_path(xml_path)
+        data = mujoco.MjData(model)
+        data.qpos=qs
+        mujoco.mj_forward(model, data)
+        jacp = np.zeros((3, model.nv))  # translation jacobian
+        jacr = np.zeros((3, model.nv)) 
+
+        site_id=model.site(site_name).id
+        mujoco.mj_jacSite(model, data, jacp, jacr, site_id)
+
+        return np.vstack((jacp,jacr))
+        
+
+    def Jh_full(self,n,contact_orientations,Rpks,Js):
+        for i in range(n):
+            wi_T=block_diag(contact_orientations[i].T, contact_orientations[i].T)
+            Rpki=block_diag(Rpks[i],Rpks[i])
+            Jh_i=np.matmul(np.matmul(wi_T,Rpki),Js[i])
+            self.Jh_blocks.append(Jh_i)
+        return block_diag(*self.Jh_blocks)
+    
+    def selection_matrix(self,n,type):
+        if type=='HF':
+            Hi=np.array([[1,0,0,0,0,0],
+                        [0,1,0,0,0,0],
+                        [0,0,1,0,0,0]])
+
+        elif type=='SF':
+            Hi=np.array([[1, 0, 0, 0, 0, 0],
+                            [0, 1, 0, 0, 0, 0],
+                            [0, 0, 1, 0, 0, 0],
+                            [0, 0, 0, 1, 0, 0]])
+            
+        diagonal_stacked = block_diag(*[Hi for _ in range(n)])
+
+        return diagonal_stacked
 
 class TransMatrix:
     def rotation_x(self,theta):
@@ -429,26 +497,31 @@ class TransMatrix:
         
         return R_z
 
+
     # Function to compute the left and right finger rotations using the dynamic rotation matrices
     def compute_finger_rotations(self,object_pose_cam, palm_to_cam):
     
-        # Rotation matrices for -90° and 90° rotations
-        R_x_90 = self.rotation_x(90)
-        R_x_minus_90 = self.rotation_x(-90)
-        R_z_minus_90 = self.rotation_z(-90)
-        R_y_180=self.rotation_y(180)
+        
 
         # Extract rotation matrices from the transformation matrices
         R_object_cam = object_pose_cam[:3, :3]  # Object pose rotation in the camera frame
-        R_palm_cam = R_y_180 @ palm_to_cam[:3, :3]       # Palm to camera rotation matrix
+        R_palm_cam = palm_to_cam[:3, :3]       # Palm to camera rotation matrix
         R_cam_palm = R_palm_cam.T               # Camera to palm rotation matrix
 
         R_object_palm = R_object_cam @ R_cam_palm
+        R_left=np.array([[1, 0, 0],
+                            [0, 0, -1],
+                            [0, 1, 0]])
+        R_right=np.array([[1, 0, 0],
+                            [0, 0, 1],
+                            [0, -1, 0]])
+
         # Compute left finger's rotation matrix: T^B_L = R_object_cam * R_cam_palm * R_y(-90°)
-        left_finger_rotation = R_object_cam @ R_cam_palm @ R_x_90
+        left_finger_rotation =R_left@ R_object_palm
+
 
         # Compute right finger's rotation matrix: T^B_R = R_object_cam * R_cam_palm * R_z(90°) * R_y(90°)
-        right_finger_rotation = R_object_cam @ R_cam_palm @ R_z_minus_90 @ R_x_minus_90 
+        right_finger_rotation = R_right@ R_object_palm
 
         return right_finger_rotation,left_finger_rotation, R_object_palm
     
@@ -478,8 +551,8 @@ class TransMatrix:
         R_object_palm = R_object_cam @ R_cam_palm
 
 
-        contact1_pos=(obj_pos_palm.reshape(3,1)+np.dot(R_object_palm,bs[0])).reshape(3,)
-        contact2_pos=(obj_pos_palm.reshape(3,1)+np.dot(R_object_palm,bs[1])).reshape(3,)
+        contact1_pos=(obj_pos_palm.reshape(3,1)+np.dot(R_object_palm,bs[0])).reshape(3)
+        contact2_pos=(obj_pos_palm.reshape(3,1)+np.dot(R_object_palm,bs[1])).reshape(3)
 
         return contact1_pos, contact2_pos
         
@@ -504,15 +577,15 @@ class convert_to_mujoco:
         #                                 [0        , 0.        , 1.        , 0.0347224],
         #                                 [-1.        , 0.        , 0.        , -0.0200952  ],
         #                                 [0.        , 0.        , 0.        , 1.        ]])
-        self.T_preal_pbm=np.array([[0, -1, 0, -0.0200952], 
-                                  [0, 0, 1, 0.0257578],
-                                  [-1, 0, 0, -0.0347224],
-                                  [0, 0, 0, 1]])
+    #     self.T_preal_pbm=np.array([[0, -1, 0, -0.0200952], 
+    #                               [0, 0, 1, 0.0257578],
+    #                               [-1, 0, 0, -0.0347224],
+    #                               [0, 0, 0, 1]])
 
-        self.T_pbm_preal=np.array([[-0.       , -0.       , -1.       , -0.0347224],
-       [-1.       , -0.       , -0.       , -0.0200952],
-       [ 0.       ,  1.       ,  0.       , -0.0257578],
-       [ 0.       ,  0.       ,  0.       ,  1.       ]])
+    #     self.T_pbm_preal=np.array([[-0.       , -0.       , -1.       , -0.0347224],
+    #    [-1.       , -0.       , -0.       , -0.0200952],
+    #    [ 0.       ,  1.       ,  0.       , -0.0257578],
+    #    [ 0.       ,  0.       ,  0.       ,  1.       ]])
 
         self.palm_wrt_cam=palm_wrt_cam
         
@@ -580,13 +653,13 @@ class convert_to_mujoco:
     #     # Return the first three elements (x, y, z) of the result
     #     return pos_palmbody_cam
 
-    def obj_pbm_from_preal(self,obj_wrt_preal):
-        v2=obj_wrt_preal-self.T_pbm_preal[:3,3]
-        return np.dot(self.T_preal_pbm[:3,:3],v2)
+    # def obj_pbm_from_preal(self,obj_wrt_preal):
+    #     v2=obj_wrt_preal-self.T_pbm_preal[:3,3]
+    #     return np.dot(self.T_preal_pbm[:3,:3],v2)
     
-    def x_pbm_preal_c(self): #in camera frame
-        x_pbm_preal=self.T_pbm_preal[:3,3]
-        return np.dot(self.palm_wrt_cam[:3,:3],x_pbm_preal)
+    # def x_pbm_preal_c(self): #in camera frame
+    #     x_pbm_preal=self.T_pbm_preal[:3,3]
+    #     return np.dot(self.palm_wrt_cam[:3,:3],x_pbm_preal)
 
     # def pos_index_base_mujoco(self,pos):
     #     obj_palm=pos

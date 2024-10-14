@@ -799,7 +799,7 @@ class PosRot:
         # Get positions
         pos1=Td[:3,3]
         pos2=T[:3,3]
-        pos=Td-T
+        pos=pos1-pos2
         
         # Get quaternions from MuJoCo data (assuming they are in [x, y, z, w] format)
         mat1 = Td[:3,:3]

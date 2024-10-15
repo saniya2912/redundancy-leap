@@ -11,26 +11,28 @@ leap_hand=LeapNode_Poscontrol()
 
 index_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_index.xml'
 thumb_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_thumb.xml'
+index_path_J="/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/index_new.xml"
+thumb_path_J="/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/thumb_new.xml"
 
 pos_ik_index=OnlyPosIK(index_path)
 pos_ik_thumb=OnlyPosIK(thumb_path)
 
-T_indexbase_palm=np.array([[ 0.        ,  1.        ,  0.        ,  0.03811195],
-       [ 0.        ,  0.        , -1.        ,  0.060044  ],
-       [-1.        ,  0.        ,  0.        , -0.007246  ],
-       [ 0.        ,  0.        ,  0.        ,  1.        ]])
+# T_indexbase_palm=np.array([[ 0.        ,  1.        ,  0.        ,  0.03811195],
+#        [ 0.        ,  0.        , -1.        ,  0.060044  ],
+#        [-1.        ,  0.        ,  0.        , -0.007246  ],
+#        [ 0.        ,  0.        ,  0.        ,  1.        ]])
 # Rpk_index=T_indexbase_palm[:3,:3]
-Rpk_index=np.array([[ 0.,  0., -1.],
-                    [-1.,  0.,  0.],         
-                    [ 0.,  1.,  0.]])
+Rpk_index=np.array([[ 1.,  0., 0.],
+                    [0.,  -1.,  0.],         
+                    [ 0.,  0.,  -1.]])
 
-T_thumbbase_palm=np.array([[0, 0, 1, -0.024188],
-              [0, 1, 0, 0.03574396],
-              [-1, 0, 0, -0.010146],
-              [0, 0, 0, 1]])
+# T_thumbbase_palm=np.array([[0, 0, 1, -0.024188],
+#               [0, 1, 0, 0.03574396],
+#               [-1, 0, 0, -0.010146],
+#               [0, 0, 0, 1]])
 # Rpk_thumb=T_thumbbase_palm[:3,:3]
-Rpk_thumb=np.array([[ 0.,  0., -1.],
-                    [-1.,  0.,  0.],         
+Rpk_thumb=np.array([[ 1.,  0., 0.],
+                    [0.,  0.,  -1.],         
                     [ 0.,  1.,  0.]])
 
 Rpks=[Rpk_index,Rpk_thumb]
@@ -116,8 +118,8 @@ def f(array,Td):
     contact_orientations=[contactrot_index,contactrot_thumb]
     
     #from mujoco xml filif __name__ == "__main__":
-    J_index=grasp.J(index_path,'contact_index',qs1)
-    J_thumb=grasp.J(thumb_path,'contact_thumb',qs2)
+    J_index=grasp.J(index_path_J,'contact_index',qs1)
+    J_thumb=grasp.J(thumb_path_J,'contact_thumb',qs2)
     Js=[J_index,J_thumb]
     
     Rpks = [Rpk_index, Rpk_thumb]

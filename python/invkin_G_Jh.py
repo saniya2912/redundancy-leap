@@ -19,13 +19,17 @@ T_indexbase_palm=np.array([[ 0.        ,  1.        ,  0.        ,  0.03811195],
        [ 0.        ,  0.        , -1.        ,  0.060044  ],
        [-1.        ,  0.        ,  0.        , -0.007246  ],
        [ 0.        ,  0.        ,  0.        ,  1.        ]])
-Rpk_index=T_indexbase_palm[:3,:3]
+# Rpk_index=T_indexbase_palm[:3,:3]
+Rpk_index=np.eye(3)
 
 T_thumbbase_palm=np.array([[0, 0, 1, -0.024188],
               [0, 1, 0, 0.03574396],
               [-1, 0, 0, -0.010146],
               [0, 0, 0, 1]])
-Rpk_thumb=T_thumbbase_palm[:3,:3]
+# Rpk_thumb=T_thumbbase_palm[:3,:3]
+Rpk_thumb=np.eye(3)
+
+
 Rpks=[Rpk_index,Rpk_thumb]
 n = 2
 palm_wrt_cam = np.array([[-0.01388162,  0.98129904,  0.19198282,  0.03377598],
@@ -76,7 +80,7 @@ def f(array):
     contact_orientations=[contactrot_index,contactrot_thumb]
     G=grasp.G(n,contact_orientations,r_theta,bs)
     
-    
+
     J_index=grasp.J(index_path,'contact_index',qs1)
     J_thumb=grasp.J(thumb_path,'contact_thumb',qs2)
     Js=[J_index,J_thumb]

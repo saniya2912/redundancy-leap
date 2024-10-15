@@ -1,11 +1,11 @@
 import pickle
 import numpy as np
-from main_redundancy import GraspClass, TransMatrix, OnlyPosIK, PosRot, LeapNode_Taucontrol, LeapNode_Poscontrol
+from main_redundancy import *
 
 import time
 # grasp = GraspClass()
 transmatrix = TransMatrix()
-
+leap_hand=LeapNode_Taucontrol()
 
 
 index_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_index.xml'
@@ -36,9 +36,6 @@ palm_wrt_cam = np.array([[-0.01388162,  0.98129904,  0.19198282,  0.03377598],
 
 
 
-b1 = np.array([[0],[-0.027],[0]])
-b2 = np.array([[0],[0.027],[0]])
-bs = [b1, b2]
 
 grasp = GraspClass()
 
@@ -67,18 +64,24 @@ def initialize(filename):
 
 def f(array,Td):
     object_pose_cam=array
+    
+    b1 = np.array([[0],[-0.027],[0]])
+    b2 = np.array([[0],[0.027],[0]])
+    bs = [b1, b2]
     obj_pos=transmatrix.compute_obj_pos(object_pose_cam, palm_wrt_cam) #object position with respect to palm camera frame
     print('obj_pos',obj_pos)
 
     contactpos_1,contactpos_2=transmatrix.compute_contact_locations(object_pose_cam, palm_wrt_cam,bs)
     print('contact1',contactpos_1)
     print('contact2',contactpos_2)
+    qs=leap_hand.read_pos()
+    qs_real=qs
+    temp = qs[0].copy()  # Use a temporary variable to hold the value of Tau[0]
+    qs[0] = qs[1]
+    qs[1] = temp
 
-    # #convert to mujoco requirements
-    # v3=palm_wrt_cam[:3,3]+mujoco_convert.x_pbm_preal_c()-object_pose_cam[:3,3]
-    # x_obj_pbm=np.dot(np.dot(palm_wrt_cam[:3,:3].T,mujoco_convert.T_pbm_preal[:3,:3].T),-v3)
-
-    # x_obj_pbm=mujoco_convert.obj_pbm_from_preal(obj_pos)
+    qs1=qs[:4]
+    qs2=qs[-4:]
 
     
     
@@ -86,16 +89,18 @@ def f(array,Td):
     
     # obj_pos_mujoco=np.array([0,0,-0.1])
     
-    qs1=pos_ik_index.calculate(contactpos_1,'contact_index')
-    qs2=pos_ik_thumb.calculate(contactpos_2,'contact_thumb')
-    qs1_real=qs1
-    qs2_real=qs2
-    qs1_real[0],qs1_real[1]=qs1_real[1],qs1_real[0]
-    qs=np.concatenate([qs1_real,np.zeros(8),qs2_real])
-    leap_pos=LeapNode_Poscontrol()
+    # qs1=pos_ik_index.calculate(contactpos_1,'contact_index')
+    # qs2=pos_ik_thumb.calculate(contactpos_2,'contact_thumb')
+    # qs1_real=qs1
+    # qs2_real=qs2
+    # qs1_real[0],qs1_real[1]=qs1_real[1],qs1_real[0]
+    # qs=np.concatenate([qs1_real,np.zeros(8),qs2_real])
+    # leap_pos=LeapNode_Poscontrol()
     # print(qs)
-    while time <4:
-        leap_pos.set_allegro(qs)
+    
+    
+    # while time.time() - start_time < 4:
+    #     leap_pos.set_allegro(qs)
 
     n = 2
     contactrot_index,contactrot_thumb,r_theta=transmatrix.compute_finger_rotations(object_pose_cam,palm_wrt_cam)
@@ -108,7 +113,6 @@ def f(array,Td):
     
     Rpks = [Rpk_index, Rpk_thumb]
     
-    bs = [b1, b2]
 
     # Compute the grasp matrices
     Jh_ = grasp.Jh_full(n, contact_orientations, Rpks, Js)
@@ -124,7 +128,7 @@ def f(array,Td):
     Kp_d = 0.1*np.eye(6)
     Kp_k = 1
 
-    n0 = 1000*np.ones([8,1])
+    n0 = np.ones([8,1])
     I = np.eye(8)
     phi_d = np.ones([8,1])
 
@@ -154,13 +158,27 @@ def f(array,Td):
     
     # Total torque
     Tau = Tau_dy + Tau_kin*0
-    Tau_real=Tau
+    Tau_sim=Tau
+    print(Tau)
 
-    Tau_real[0],Tau_real[1]=Tau_real[1],Tau_real[0]
+    temp = Tau[0].copy()  # Use a temporary variable to hold the value of Tau[0]
+    Tau[0] = Tau[1]
+    Tau[1] = temp
 
-    leap_hand=LeapNode_Taucontrol()
-    while time>4 and time<10:
+    Tau_real=np.hstack([Tau[:4].flatten(), np.zeros(8), Tau[-4:].flatten()])
+
+    print(Tau_real)
+
+    start_time = time.time()
+    while 0 < time.time() - start_time < 10:
+        print(f"Elapsed Time: {time.time() - start_time:.2f} seconds")
         leap_hand.set_desired_torque(Tau_real)
+        
+        actual_position = leap_hand.read_pos()  # Read the actual position
+        print("Sent Torque:", Tau_real)
+        
+        print("Actual Position:", actual_position)
+
     
 
 def load_and_compute(filename,Td):

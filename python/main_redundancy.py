@@ -34,16 +34,23 @@ class LeapNode_Poscontrol:
         #You can put the correct port here or have the node auto-search for a hand at the first 3 ports.
         self.motors = motors = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
         try:
-            self.dxl_client = DynamixelClient(motors, '/dev/ttyUSB0', 4000000)
+            # Try connecting to /dev/ttyUSB0
+            self.dxl_client = DynamixelClient(self.motors, '/dev/ttyUSB0', 4000000)
             self.dxl_client.connect()
-        except Exception as e:
-            print("[DEBUG]", e)
+        except Exception:
+            # Try connecting to /dev/ttyUSB1 if /dev/ttyUSB0 fails
             try:
-                self.dxl_client = DynamixelClient(motors, '/dev/ttyUSB1', 4000000)
+                self.dxl_client = DynamixelClient(self.motors, '/dev/ttyUSB1', 4000000)
                 self.dxl_client.connect()
             except Exception:
-                self.dxl_client = DynamixelClient(motors, '/dev/ttyUSB2', 4000000)
-                self.dxl_client.connect()
+                # Try connecting to /dev/ttyUSB2 if /dev/ttyUSB1 fails
+                try:
+                    self.dxl_client = DynamixelClient(self.motors, '/dev/ttyUSB2', 4000000)
+                    self.dxl_client.connect()
+                except Exception:
+                    # Try connecting to /dev/ttyUSB3 if /dev/ttyUSB2 fails
+                    self.dxl_client = DynamixelClient(self.motors, '/dev/ttyUSB3', 4000000)
+                    self.dxl_client.connect()
 
         self.dxl_client.set_torque_enabled(self.motors, False)
         ADDR_SET_MODE = 11
@@ -129,16 +136,20 @@ class LeapNode_Taucontrol():
             # Try connecting to /dev/ttyUSB0
             self.dxl_client = DynamixelClient(self.motors, '/dev/ttyUSB0', 4000000)
             self.dxl_client.connect()
-        except Exception as e:
-            print("[DEBUG]", e)
+        except Exception:
             # Try connecting to /dev/ttyUSB1 if /dev/ttyUSB0 fails
             try:
                 self.dxl_client = DynamixelClient(self.motors, '/dev/ttyUSB1', 4000000)
                 self.dxl_client.connect()
             except Exception:
                 # Try connecting to /dev/ttyUSB2 if /dev/ttyUSB1 fails
-                self.dxl_client = DynamixelClient(self.motors, '/dev/ttyUSB2', 4000000)
-                self.dxl_client.connect()
+                try:
+                    self.dxl_client = DynamixelClient(self.motors, '/dev/ttyUSB2', 4000000)
+                    self.dxl_client.connect()
+                except Exception:
+                    # Try connecting to /dev/ttyUSB3 if /dev/ttyUSB2 fails
+                    self.dxl_client = DynamixelClient(self.motors, '/dev/ttyUSB3', 4000000)
+                    self.dxl_client.connect()
 
         self.dxl_client.set_torque_enabled(self.motors, False)
         # Set the control mode to Torque Control Mode

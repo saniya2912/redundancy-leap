@@ -47,6 +47,7 @@ palm_wrt_cam = np.array([[-0.01388162,  0.98129904,  0.19198282,  0.03377598],
 
 
 grasp = GraspClass()
+grasp2=GraspClass2()
 
 def initialize(filename):
     try:
@@ -78,14 +79,14 @@ def f(array,Td):
     b2 = np.array([[0],[0.027],[0]])
     bs = [b1, b2]
     obj_pos=transmatrix.compute_obj_pos(object_pose_cam, palm_wrt_cam) #object position with respect to palm camera frame
-    print('obj_pos',obj_pos)
+    # print('obj_pos',obj_pos)
 
     contactpos_1,contactpos_2=transmatrix.compute_contact_locations(object_pose_cam, palm_wrt_cam,bs)
     print('contact1',contactpos_1)
     print('contact2',contactpos_2)
     qs=leap_hand.read_pos_leap()
     qs_real=qs
-    print('qs_real',qs_real)
+    # print('qs_real',qs_real)
 
     temp = qs[0].copy()  # Use a temporary variable to hold the value of Tau[0]
     qs[0] = qs[1]
@@ -118,29 +119,40 @@ def f(array,Td):
     contact_orientations=[contactrot_index,contactrot_thumb]
     
     #from mujoco xml filif __name__ == "__main__":
-    J_index=grasp.J(index_path_J,'contact_index',qs1)
-    J_thumb=grasp.J(thumb_path_J,'contact_thumb',qs2)
+    J_index=grasp2.J(index_path_J,'contact_index',qs1)
+    J_thumb=grasp2.J(thumb_path_J,'contact_thumb',qs2)
     Js=[J_index,J_thumb]
     
     Rpks = [Rpk_index, Rpk_thumb]
-    
+    # print('Rpks.shape')
+    Jh_leap=grasp2.Jh(n, contact_orientations, Rpks, Js)
+    # print('Jh',Jh_leap.shape)
+    G_leap=grasp2.G(n, contact_orientations, r_theta, bs)
 
-    # Compute the grasp matrices
-    Jh_ = grasp.Jh_full(n, contact_orientations, Rpks, Js)
-    G_ = grasp.G_full(n, contact_orientations, r_theta, bs)
+    # F=np.array([0,0,1,0,0,1]).reshape(6,1)
+    # w=np.dot(G_leap,F)
+    # print('w',w)
 
-    H=grasp.selection_matrix(n,'SF')
+    # # Compute the grasp matrices
+    # Jh_ = grasp.Jh_full(n, contact_orientations, Rpks, Js)
+    # G_ = grasp.G_full(n, contact_orientations, r_theta, bs)
 
-    Jh_leap=H@Jh_
-    G_leap_T=H@G_.T
-    G_leap=G_leap_T.T
+    # H=grasp.selection_matrix(n,'HF')
+
+    # print('Jh_full',Jh_.shape)
+
+    # Jh_leap=H@Jh_
+    # print('jh',Jh_leap.shape)
+    # G_leap_T=H@G_.T
+    # G_leap=G_leap_T.T
+    # print('G',G_leap.shape)
 
     # Controller parameters
     Kp_d = 0.1*np.eye(6)
     Kp_k = 1
 
-    n0 = np.ones([8,1])
-    I = np.eye(8)
+    n0 = (10**3)*np.ones([6,1])
+    I = np.eye(6)
     phi_d = np.ones([8,1])
 
 #leap_hand = LeapNode_Taucontrol()
@@ -157,7 +169,14 @@ def f(array,Td):
     
     # Compute desired torque
     Tau_dy = Jh_leap.T @ (Fimp*0 + Fnull)
-    
+    print('F_null',Fnull)
+    w=np.dot(G_leap,Fnull)
+    print('w',w)
+
+    rank = np.linalg.matrix_rank(G_leap)
+
+# Print the rank
+    print(f"Rank of the matrix: {rank}")
     
     
     # Read position from the Leap hand
@@ -180,7 +199,7 @@ def f(array,Td):
 
     Tau_real=np.hstack([Tau[:4].flatten(), np.zeros(8), Tau[-4:].flatten()])
 
-    print(Tau_real)
+    # print(Tau_real)
 
     # start_time = time.time()
     # while 0 < time.time() - start_time < 10:

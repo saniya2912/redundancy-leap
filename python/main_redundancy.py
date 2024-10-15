@@ -165,7 +165,7 @@ class LeapNode_Taucontrol():
         desired_torque_flat = [float(torque) for torque in desired_torque]  # Convert all to floats
 
         # Convert to NumPy array and calculate the current
-        desired_current = np.array([torque / 0.51 for torque in desired_torque_flat])
+        desired_current = np.array([torque / 0.3537 for torque in desired_torque_flat])
         # Adjust this based on your motor's torque constant
 
         # Address for the Goal Current (or Torque) register

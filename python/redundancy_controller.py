@@ -5,7 +5,8 @@ from main_redundancy import *
 import time
 # grasp = GraspClass()
 transmatrix = TransMatrix()
-leap_hand=LeapNode_Taucontrol()
+# leap_hand=LeapNode_Taucontrol()
+leap_hand=LeapNode_Poscontrol()
 
 
 index_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_index.xml'
@@ -18,13 +19,15 @@ T_indexbase_palm=np.array([[ 0.        ,  1.        ,  0.        ,  0.03811195],
        [ 0.        ,  0.        , -1.        ,  0.060044  ],
        [-1.        ,  0.        ,  0.        , -0.007246  ],
        [ 0.        ,  0.        ,  0.        ,  1.        ]])
-Rpk_index=T_indexbase_palm[:3,:3]
+# Rpk_index=T_indexbase_palm[:3,:3]
+Rpk_index=np.eye(3)
 
 T_thumbbase_palm=np.array([[0, 0, 1, -0.024188],
               [0, 1, 0, 0.03574396],
               [-1, 0, 0, -0.010146],
               [0, 0, 0, 1]])
-Rpk_thumb=T_thumbbase_palm[:3,:3]
+# Rpk_thumb=T_thumbbase_palm[:3,:3]
+Rpk_thumb=np.eye(3)
 
 Rpks=[Rpk_index,Rpk_thumb]
 n = 2
@@ -74,8 +77,10 @@ def f(array,Td):
     contactpos_1,contactpos_2=transmatrix.compute_contact_locations(object_pose_cam, palm_wrt_cam,bs)
     print('contact1',contactpos_1)
     print('contact2',contactpos_2)
-    qs=leap_hand.read_pos()
+    qs=leap_hand.read_pos_leap()
     qs_real=qs
+    print('qs_real',qs_real)
+
     temp = qs[0].copy()  # Use a temporary variable to hold the value of Tau[0]
     qs[0] = qs[1]
     qs[1] = temp
@@ -147,7 +152,7 @@ def f(array,Td):
     Fnull = (I - np.matmul(np.linalg.pinv(G_leap), G_leap)) @ n0
     
     # Compute desired torque
-    Tau_dy = Jh_leap.T @ (Fimp + Fnull)
+    Tau_dy = Jh_leap.T @ (Fimp*0 + Fnull)
     
     
     
@@ -161,7 +166,9 @@ def f(array,Td):
     # Total torque
     Tau = Tau_dy + Tau_kin*0
     Tau_sim=Tau
-    print(Tau)
+    # print(Tau)
+
+
 
     temp = Tau[0].copy()  # Use a temporary variable to hold the value of Tau[0]
     Tau[0] = Tau[1]
@@ -171,15 +178,15 @@ def f(array,Td):
 
     print(Tau_real)
 
-    start_time = time.time()
-    while 0 < time.time() - start_time < 10:
-        print(f"Elapsed Time: {time.time() - start_time:.2f} seconds")
-        leap_hand.set_desired_torque(Tau_real)
+    # start_time = time.time()
+    # while 0 < time.time() - start_time < 10:
+    #     print(f"Elapsed Time: {time.time() - start_time:.2f} seconds")
+    #     leap_hand.set_desired_torque(Tau_real)
         
-        actual_position = leap_hand.read_pos()  # Read the actual position
-        print("Sent Torque:", Tau_real)
+    #     actual_position = leap_hand.read_pos()  # Read the actual position
+    #     print("Sent Torque:", Tau_real)
         
-        print("Actual Position:", actual_position)
+    #     print("Actual Position:", actual_position)
 
     
 

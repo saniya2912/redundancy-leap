@@ -20,14 +20,18 @@ T_indexbase_palm=np.array([[ 0.        ,  1.        ,  0.        ,  0.03811195],
        [-1.        ,  0.        ,  0.        , -0.007246  ],
        [ 0.        ,  0.        ,  0.        ,  1.        ]])
 # Rpk_index=T_indexbase_palm[:3,:3]
-Rpk_index=np.eye(3)
+Rpk_index=np.array([[ 0.,  0., -1.],
+                    [-1.,  0.,  0.],         
+                    [ 0.,  1.,  0.]])
 
 T_thumbbase_palm=np.array([[0, 0, 1, -0.024188],
               [0, 1, 0, 0.03574396],
               [-1, 0, 0, -0.010146],
               [0, 0, 0, 1]])
 # Rpk_thumb=T_thumbbase_palm[:3,:3]
-Rpk_thumb=np.eye(3)
+Rpk_thumb=np.array([[ 0.,  0., -1.],
+                    [-1.,  0.,  0.],         
+                    [ 0.,  1.,  0.]])
 
 Rpks=[Rpk_index,Rpk_thumb]
 n = 2

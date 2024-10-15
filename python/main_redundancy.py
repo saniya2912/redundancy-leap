@@ -520,7 +520,6 @@ class TransMatrix:
         # Compute left finger's rotation matrix: T^B_L = R_object_cam * R_cam_palm * R_y(-90°)
         left_finger_rotation =R_left@ R_object_palm
 
-
         # Compute right finger's rotation matrix: T^B_R = R_object_cam * R_cam_palm * R_z(90°) * R_y(90°)
         right_finger_rotation = R_right@ R_object_palm
 

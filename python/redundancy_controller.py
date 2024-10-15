@@ -91,7 +91,7 @@ def f(array,Td):
     
     
     # print('obj_pos_mujoco',x_obj_pbm)
-
+    
     # obj_pos_mujoco=np.array([0,0,-0.1])
     
     # qs1=pos_ik_index.calculate(contactpos_1,'contact_index')
@@ -140,8 +140,6 @@ def f(array,Td):
 #leap_hand = LeapNode_Taucontrol()
 
 # Main control loop
-   
-
     posrot=PosRot()
     T=transmatrix.T_obj_palm(object_pose_cam,palm_wrt_cam)
 

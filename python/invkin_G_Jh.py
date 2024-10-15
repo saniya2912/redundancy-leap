@@ -1,13 +1,13 @@
 import pickle
 import numpy as np
-from main_redundancy import GraspClass, TransMatrix, OnlyPosIK
+from main_redundancy import GraspClass2, TransMatrix, OnlyPosIK
 from main import LeapNode
 import time
 import pandas as pd 
 # grasp = GraspClass()
 transmatrix = TransMatrix()
 leap=LeapNode()
-grasp=GraspClass()
+grasp=GraspClass2()
 
 index_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_index.xml'
 thumb_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_thumb.xml'
@@ -76,7 +76,7 @@ def f(array):
     contact_orientations=[contactrot_index,contactrot_thumb]
     G=grasp.G(n,contact_orientations,r_theta,bs)
     
-
+    
     J_index=grasp.J(index_path,'contact_index',qs1)
     J_thumb=grasp.J(thumb_path,'contact_thumb',qs2)
     Js=[J_index,J_thumb]

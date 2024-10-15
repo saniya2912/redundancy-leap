@@ -18,13 +18,8 @@
   </asset>
 
   <worldbody>
-    <body name="palm_cam" pos="0 0 0">
-    <body name="palm_mujoco" pos="0 0 0" quat="-0.5 -0.5 0.5 0.5">
-    <geom name="palm" pos="0.025112 0.062744 -0.023246" type="mesh" rgba="0.603922 0.14902 0.14902 1" mesh="palm_lower"/>
-    
-    <!-- <body name="mcp_joint" pos="-0.00709525 0.0230578 -0.0187224" quat="0.5 0.5 0.5 -0.5"> -->
-        
-    <body name="mcp_joint" pos="0.03811195 0.060044 -0.007246" quat="0.5 0.5 0.5 -0.5">
+    <body name="mcp_joint_fixed" pos="0 0 0">
+    <body name="mcp_joint" pos="0 0 0">
       <joint name="1" pos="0 0 0" axis="0 0 -1" range="-0.314 2.23"/>
       <geom pos="0.0084069 0.00776624 0.0146574" quat="1 0 0 0" type="mesh" rgba="0.866667 0.866667 0.0509804 1" mesh="mcp_joint"/>
       <body name="pip" pos="-0.0122 0.0381 0.0145" quat="0.5 -0.5 -0.5 0.5">
@@ -42,7 +37,8 @@
       </body>
     </body>
     </body>
-    </body>
+
+
     
   </worldbody>
 

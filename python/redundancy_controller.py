@@ -1,12 +1,27 @@
 import pickle
 import numpy as np
 from main_redundancy import *
+import pandas as pd
 
 import time
 # grasp = GraspClass()
 transmatrix = TransMatrix()
 # leap_hand=LeapNode_Taucontrol()
 leap_hand=LeapNode_Poscontrol()
+
+def save_to_csv(r_theta, G, Jh, phi, xobj):
+    data = {
+        'r_theta': [r_theta.tolist()],  # Store r_theta as a list
+        'G': [G.tolist()],  # Store G matrix as a list
+        'Jh': [Jh.tolist()],  # Store Jh matrix as a list
+        'phi': [phi.tolist()],  # Store phi as a list
+        'xobj': [xobj.tolist()]  # Store xobj as a list
+    }
+    
+    combined_df = pd.DataFrame(data)
+
+    # Save the combined DataFrame to a single CSV file
+    combined_df.to_csv('pos5.csv', index=False)
 
 
 index_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_index.xml'
@@ -87,15 +102,18 @@ def f(array,Td):
     # print('obj_pos',obj_pos)
 
     contactpos_1,contactpos_2=transmatrix.compute_contact_locations(object_pose_cam, palm_wrt_cam,bs)
-    print('contact1',contactpos_1)
-    print('contact2',contactpos_2)
+    # print('contact1',contactpos_1)
+    # print('contact2',contactpos_2)
     qs=leap_hand.read_pos_leap()
+    print('qs',qs)
     qs_real=qs
     # print('qs_real',qs_real)
 
     temp = qs[0].copy()  # Use a temporary variable to hold the value of Tau[0]
     qs[0] = qs[1]
     qs[1] = temp
+
+    print('qschanged',qs)
 
     qs1=qs[:4]
     qs2=qs[-4:]
@@ -137,48 +155,48 @@ def f(array,Td):
     # print('Rpks.shape')
     Jh_leap=grasp2.Jh(n, contact_orientations, Rpks, Js)
     Jh_leap_J=grasp2.Jh(n, contact_orientations, Rpks_J, Js_J)
-    print('Jh_leap',Jh_leap)
-    print('Jh_leap_J',Jh_leap_J)
+    # print('Jh_leap',Jh_leap)
+    # print('Jh_leap_J',Jh_leap_J.shape)
     # print('Jh',Jh_leap.shape)
     G_leap=grasp2.G(n, contact_orientations, r_theta, bs)
     # print('G_leap',G_leap)
 
-    # F=np.array([0,0,1,0,0,1]).reshape(6,1)
-    # w=np.dot(G_leap,F)
-    # print('w',w)
-    # J_index_full=grasp.J(index_path_J,'contact_index',qs1)
-    # J_thumb_full=grasp.J(thumb_path_J,'contact_thumb',qs2)
-    # Js_full=[J_index_full,J_thumb_full]
+#     # F=np.array([0,0,1,0,0,1]).reshape(6,1)
+#     # w=np.dot(G_leap,F)
+#     # print('w',w)
+#     # J_index_full=grasp.J(index_path_J,'contact_index',qs1)
+#     # J_thumb_full=grasp.J(thumb_path_J,'contact_thumb',qs2)
+#     # Js_full=[J_index_full,J_thumb_full]
 
-    # # Compute the grasp matrices
-    # Jh_ = grasp.Jh_full(n, contact_orientations, Rpks, Js_full)
-    # G_ = grasp.G_full(n, contact_orientations, r_theta, bs)
+#     # # Compute the grasp matrices
+#     # Jh_ = grasp.Jh_full(n, contact_orientations, Rpks, Js_full)
+#     # G_ = grasp.G_full(n, contact_orientations, r_theta, bs)
 
-    # H=grasp.selection_matrix(n,'HF')
+#     # H=grasp.selection_matrix(n,'HF')
 
-    # print('Jh_full',Jh_.shape)
+#     # print('Jh_full',Jh_.shape)
 
-    # Jh_leap_full=H@Jh_
-    # print('jh_full',Jh_leap_full)
-    # G_leap_T=H@G_.T
-    # G_leap_full=G_leap_T.T
-    # print('G_full',G_leap_full)
+#     # Jh_leap_full=H@Jh_
+#     # print('jh_full',Jh_leap_full)
+#     # G_leap_T=H@G_.T
+#     # G_leap_full=G_leap_T.T
+#     # print('G_full',G_leap_full)
 
-    # Controller parameters
-    Kp_d = 0.1*np.eye(6)
-    Kp_k = 1
+#     # Controller parameters
+#     Kp_d = 0.1*np.eye(6)
+#     Kp_k = 1
 
-    n0 = 100*np.ones([6,1])
-    I = np.eye(6)
-    phi_d = np.ones([8,1])
+#     n0 = 100*np.ones([6,1])
+#     I = np.eye(6)
+#     phi_d = np.ones([8,1])
 
-#leap_hand = LeapNode_Taucontrol()
+# #leap_hand = LeapNode_Taucontrol()
 
-# Main control loop
-    posrot=PosRot()
-    T=transmatrix.T_obj_palm(object_pose_cam,palm_wrt_cam)
+# # Main control loop
+#     posrot=PosRot()
+#     T=transmatrix.T_obj_palm(object_pose_cam,palm_wrt_cam)
 
-    q_final=posrot.q_subs(Td,T)
+#     q_final=posrot.q_subs(Td,T)
 
     # Compute forces
     # Fimp = np.dot(np.linalg.pinv(G_leap),np.dot(Kp_d , (q_final.reshape(6,1))))
@@ -199,46 +217,46 @@ def f(array,Td):
 
 #     print("Condition Number:", condition_number)
 
-    U, s, Vt = np.linalg.svd(G_leap)
+#     U, s, Vt = np.linalg.svd(G_leap)
     
-    # print(s)
+#     # print(s)
 
-# s is returned as a 1D array, so we can convert it to a diagonal matrix
+# # s is returned as a 1D array, so we can convert it to a diagonal matrix
 
-    # Replace the minimum singular value with 0
-    s_min_index = np.argmin(s)  # Find the index of the minimum singular value
-    s[s_min_index] = 0  # Set the minimum singular value to 0
-    # s_sorted_indices = np.argsort(s)  # Get indices of sorted singular values
-    # s[s_sorted_indices[:3]] = 0
+#     # Replace the minimum singular value with 0
+#     s_min_index = np.argmin(s)  # Find the index of the minimum singular value
+#     s[s_min_index] = 0  # Set the minimum singular value to 0
+#     # s_sorted_indices = np.argsort(s)  # Get indices of sorted singular values
+#     # s[s_sorted_indices[:3]] = 0
 
-    # Reconstruct Sigma matrix with the modified singular values
-    Sigma = np.zeros((U.shape[0], Vt.shape[0]))
-    np.fill_diagonal(Sigma, s)
+#     # Reconstruct Sigma matrix with the modified singular values
+#     Sigma = np.zeros((U.shape[0], Vt.shape[0]))
+#     np.fill_diagonal(Sigma, s)
 
-    # print('sigma_new',Sigma)
+#     # print('sigma_new',Sigma)
 
-    # Reconstruct the matrix G_leap
-    G_leap_reconstructed = np.dot(U, np.dot(Sigma, Vt))
+#     # Reconstruct the matrix G_leap
+#     G_leap_reconstructed = np.dot(U, np.dot(Sigma, Vt))
 
-    # print('G_new',G_leap_reconstructed)
+#     # print('G_new',G_leap_reconstructed)
 
-    F=np.array([0,0,1,0,0,1]).reshape(6,1)
-    w=np.dot(G_leap_reconstructed,F)
+#     F=np.array([0,0,1,0,0,1]).reshape(6,1)
+#     w=np.dot(G_leap_reconstructed,F)
 
-    # print('wrench',w)
+#     # print('wrench',w)
 
-    Fimp = np.dot(np.linalg.pinv(G_leap),np.dot(Kp_d , (q_final.reshape(6,1))))
-    # Fnull = (I - np.matmul(np.linalg.pinv(G_leap), G_leap)) @ n0
+#     Fimp = np.dot(np.linalg.pinv(G_leap),np.dot(Kp_d , (q_final.reshape(6,1))))
+#     # Fnull = (I - np.matmul(np.linalg.pinv(G_leap), G_leap)) @ n0
     
-    # Compute desired torque
+#     # Compute desired torque
     
 
-    Fnull = (I - np.matmul(np.linalg.pinv(G_leap_reconstructed), G_leap_reconstructed)) @ n0
-    Tau_dy = Jh_leap.T @ (Fimp*0 + Fnull)
-    Tau_dy_J = Jh_leap_J.T @ (Fimp*0 + Fnull)
+#     Fnull = (I - np.matmul(np.linalg.pinv(G_leap_reconstructed), G_leap_reconstructed)) @ n0
+#     Tau_dy = Jh_leap.T @ (Fimp*0 + Fnull)
+#     Tau_dy_J = Jh_leap_J.T @ (Fimp*0 + Fnull)
 
-    print('Tau',Tau_dy)
-    print('Tau_J',Tau_dy_J)
+#     print('Tau',Tau_dy)
+#     print('Tau_J',Tau_dy_J)
 
     # print('fnull',Fnull)
     
@@ -259,25 +277,25 @@ def f(array,Td):
     # print(Sigma)
     
     
-    # Read position from the Leap hand
-    #phi = leap_hand.read_pos()
-    phi=np.ones([8,1])
+    # # Read position from the Leap hand
+    # #phi = leap_hand.read_pos()
+    # phi=np.ones([8,1])
     
-    # Kinematic control torque
-    Tau_kin = Kp_k * (phi_d - phi)  # Corrected this line
+    # # Kinematic control torque
+    # Tau_kin = Kp_k * (phi_d - phi)  # Corrected this line
     
-    # Total torque
-    Tau = Tau_dy + Tau_kin*0
-    Tau_sim=Tau
-    # print(Tau)
+    # # Total torque
+    # Tau = Tau_dy + Tau_kin*0
+    # Tau_sim=Tau
+    # # print(Tau)
 
 
 
-    temp = Tau[0].copy()  # Use a temporary variable to hold the value of Tau[0]
-    Tau[0] = Tau[1]
-    Tau[1] = temp
+    # temp = Tau[0].copy()  # Use a temporary variable to hold the value of Tau[0]
+    # Tau[0] = Tau[1]
+    # Tau[1] = temp
 
-    Tau_real=np.hstack([Tau[:4].flatten(), np.zeros(8), Tau[-4:].flatten()])
+    # Tau_real=np.hstack([Tau[:4].flatten(), np.zeros(8), Tau[-4:].flatten()])
     # print('Tau',Tau_real)
 
     # print(Tau_real)
@@ -291,6 +309,16 @@ def f(array,Td):
     #     print("Sent Torque:", Tau_real)
         
     #     print("Actual Position:", actual_position)
+
+    temp = qs_real[0].copy()  # Use a temporary variable to hold the value of Tau[0]
+    qs_real[0] = qs_real[1]
+    qs_real[1] = temp
+
+    save_to_csv(r_theta,G_leap,Jh_leap,qs_real,obj_pos)
+
+    while True:
+        leap_hand.set_allegro(qs_real)
+    
 
     
 

@@ -30,7 +30,7 @@ class LeapNode_Poscontrol:
         self.kD = 200
         self.curr_lim = 350
         self.prev_pos = self.pos = self.curr_pos = lhu.allegro_to_LEAPhand(np.zeros(16))
-           
+        
         #You can put the correct port here or have the node auto-search for a hand at the first 3 ports.
         self.motors = motors = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
         try:
@@ -345,7 +345,6 @@ class GraspClass2:
         
         return np.vstack([matrix1, matrix2])
 
-
     def G(self,n,contact_orientations, r_theta,bs):
         for i in range(n):
             G_i_matrix = self.G_i(contact_orientations[i],r_theta,bs[i])
@@ -529,10 +528,12 @@ class TransMatrix:
                             [0, -1, 0]])
 
         # Compute left finger's rotation matrix: T^B_L = R_object_cam * R_cam_palm * R_y(-90°)
-        left_finger_rotation =R_left@ R_object_palm
+        # left_finger_rotation =R_left@ R_object_palm
+        left_finger_rotation = R_object_palm@R_left
 
-        # Compute right finger's rotation matrix: T^B_R = R_object_cam * R_cam_palm * R_z(90°) * R_y(90°)
-        right_finger_rotation = R_right@ R_object_palm
+        # # Compute right finger's rotation matrix: T^B_R = R_object_cam * R_cam_palm * R_z(90°) * R_y(90°)
+        # 
+        right_finger_rotation =  R_object_palm@R_right
 
         return right_finger_rotation,left_finger_rotation, R_object_palm
     

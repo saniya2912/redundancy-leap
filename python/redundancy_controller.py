@@ -7,27 +7,27 @@ import time
 # grasp = GraspClass()
 transmatrix = TransMatrix()
 # leap_hand=LeapNode_Taucontrol()
-leap_hand=LeapNode_Poscontrol()
+leap_hand = LeapNode_Poscontrol()
 
-def save_to_csv(r_theta, G, Jh, phi, xobj):
-    data = {
-        'r_theta': [r_theta.tolist()],  # Store r_theta as a list
-        'G': [G.tolist()],  # Store G matrix as a list
-        'Jh': [Jh.tolist()],  # Store Jh matrix as a list
-        'phi': [phi.tolist()],  # Store phi as a list
-        'xobj': [xobj.tolist()]  # Store xobj as a list
-    }
+# def save_to_csv(r_theta, G, Jh, phi, xobj):
+#     data = {
+#         'r_theta': [r_theta.tolist()],  # Store r_theta as a list
+#         'G': [G.tolist()],  # Store G matrix as a list
+#         'Jh': [Jh.tolist()],  # Store Jh matrix as a list
+#         'phi': [phi.tolist()],  # Store phi as a list
+#         'xobj': [xobj.tolist()]  # Store xobj as a list
+#     }
     
-    combined_df = pd.DataFrame(data)
+#     combined_df = pd.DataFrame(data)
 
-    # Save the combined DataFrame to a single CSV file
-    combined_df.to_csv('pos5.csv', index=False)
+#     # Save the combined DataFrame to a single CSV file
+#     combined_df.to_csv('pos5.csv', index=False)
 
 
-index_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_index.xml'
-thumb_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_thumb.xml'
-index_path_J="/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/index_new.xml"
-thumb_path_J="/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/thumb_new.xml"
+index_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_index_sim.xml'
+thumb_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_thumb_sim.xml'
+# index_path_J="/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/index_new.xml"
+# thumb_path_J="/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/thumb_new.xml"
 
 pos_ik_index=OnlyPosIK(index_path)
 pos_ik_thumb=OnlyPosIK(thumb_path)
@@ -37,10 +37,12 @@ pos_ik_thumb=OnlyPosIK(thumb_path)
 #        [-1.        ,  0.        ,  0.        , -0.007246  ],
 #        [ 0.        ,  0.        ,  0.        ,  1.        ]])
 # Rpk_index=T_indexbase_palm[:3,:3]
-Rpk_index_J=np.array([[ 1.,  0., 0.],
-                    [0.,  -1.,  0.],         
-                    [ 0.,  0.,  -1.]])
-Rpk_index=np.eye(3)
+# Rpk_index_J=np.array([[ 1.,  0., 0.],
+#                     [0.,  -1.,  0.],         
+#                     [ 0.,  0.,  -1.]])
+Rpk_index=np.array([[ 0.,  -1.,   0.],
+[ 0.,   0.,  -1.],
+[ 1.,   0.,   0.]])
 
 
 # T_thumbbase_palm=np.array([[0, 0, 1, -0.024188],
@@ -48,19 +50,23 @@ Rpk_index=np.eye(3)
 #               [-1, 0, 0, -0.010146],
 #               [0, 0, 0, 1]])
 # Rpk_thumb=T_thumbbase_palm[:3,:3]
-Rpk_thumb_J=np.array([[ 1.,  0., 0.],
-                    [0.,  0.,  -1.],         
-                    [ 0.,  1.,  0.]])
-Rpk_thumb=np.eye(3)
+# Rpk_thumb_J=np.array([[ 1.,  0., 0.],
+#                     [0.,  0.,  -1.],         
+#                     [ 0.,  1.,  0.]])
+Rpk_thumb=np.array([[ 0.,  -1.,   0.],
+[ 0.,   0.,  -1.],
+[ 1.,   0.,   0.]])
 
 Rpks=[Rpk_index,Rpk_thumb]
-Rpks_J=[Rpk_index_J,Rpk_thumb_J]
+# Rpks_J=[Rpk_index_J,Rpk_thumb_J]
 n = 2
 
-palm_wrt_cam = np.array([[-0.01388162,  0.98129904,  0.19198282,  0.03377598],
-              [-0.87071609,  0.08253191, -0.48481306,  0.04381788],
-              [-0.49159166, -0.17389219,  0.85328728,  0.49460942],
-              [ 0.,  0.,  0.,  1.]])
+palm_wrt_cam =  np.array([
+    [-0.01848555, 0.97723478, 0.21134862, 0.03405158],
+    [-0.87437814, 0.08671534, -0.47743279, 0.04338642],
+    [-0.48489177, -0.19362427, 0.85287136, 0.4968603],
+    [0., 0., 0., 1.]
+])
 
 
 
@@ -109,7 +115,7 @@ def f(array,Td):
     qs_real=qs
     # print('qs_real',qs_real)
 
-    temp = qs[0].copy()  # Use a temporary variable to hold the value of Tau[0]
+    temp = qs[0]# Use a temporary variable to hold the value of Tau[0]
     qs[0] = qs[1]
     qs[1] = temp
 
@@ -124,7 +130,7 @@ def f(array,Td):
     
     # obj_pos_mujoco=np.array([0,0,-0.1])
     
-    # qs1=pos_ik_index.calculate(contactpos_1,'contact_index')
+    #qs1=pos_ik_index.calculate(contactpos_1,'contact_index')
     # qs2=pos_ik_thumb.calculate(contactpos_2,'contact_thumb')
     # qs1_real=qs1
     # qs2_real=qs2
@@ -145,16 +151,16 @@ def f(array,Td):
     J_index=grasp2.J(index_path,'contact_index',qs1)
     J_thumb=grasp2.J(thumb_path,'contact_thumb',qs2)
 
-    J_index_J=grasp2.J(index_path_J,'contact_index',qs1)
-    J_thumb_J=grasp2.J(thumb_path_J,'contact_thumb',qs2)
+    # J_index_J=grasp2.J(index_path_J,'contact_index',qs1)
+    # J_thumb_J=grasp2.J(thumb_path_J,'contact_thumb',qs2)
 
     Js=[J_index,J_thumb]
-    Js_J=[J_index_J,J_thumb_J]
+    #Js_J=[J_index_J,J_thumb_J]
     
     
     # print('Rpks.shape')
     Jh_leap=grasp2.Jh(n, contact_orientations, Rpks, Js)
-    Jh_leap_J=grasp2.Jh(n, contact_orientations, Rpks_J, Js_J)
+    # Jh_leap_J=grasp2.Jh(n, contact_orientations, Rpks_J, Js_J)
     # print('Jh_leap',Jh_leap)
     # print('Jh_leap_J',Jh_leap_J.shape)
     # print('Jh',Jh_leap.shape)
@@ -182,31 +188,13 @@ def f(array,Td):
 #     # G_leap_full=G_leap_T.T
 #     # print('G_full',G_leap_full)
 
-#     # Controller parameters
-#     Kp_d = 0.1*np.eye(6)
-#     Kp_k = 1
+    # Controller parameters
+    Kp_d = 0.1*np.eye(6)
+    Kp_k = 1
 
-#     n0 = 100*np.ones([6,1])
-#     I = np.eye(6)
-#     phi_d = np.ones([8,1])
-
-# #leap_hand = LeapNode_Taucontrol()
-
-# # Main control loop
-#     posrot=PosRot()
-#     T=transmatrix.T_obj_palm(object_pose_cam,palm_wrt_cam)
-
-#     q_final=posrot.q_subs(Td,T)
-
-    # Compute forces
-    # Fimp = np.dot(np.linalg.pinv(G_leap),np.dot(Kp_d , (q_final.reshape(6,1))))
-    # Fnull = (I - np.matmul(np.linalg.pinv(G_leap), G_leap)) @ n0
-    
-    # # Compute desired torque
-    # Tau_dy = Jh_leap.T @ (Fimp*0 + Fnull)
-    # print('F_null',Fnull)
-    # w=np.dot(G_leap,Fnull)
-    # print('w',w)
+    n0 =10*np.ones([6,1])
+    I = np.eye(6)
+    phi_d = np.ones([8,1])
 
 #     rank = np.linalg.matrix_rank(G_leap)
 
@@ -217,26 +205,42 @@ def f(array,Td):
 
 #     print("Condition Number:", condition_number)
 
-#     U, s, Vt = np.linalg.svd(G_leap)
+    U, s, Vt = np.linalg.svd(G_leap)
     
-#     # print(s)
+    # print(s)
 
-# # s is returned as a 1D array, so we can convert it to a diagonal matrix
+# s is returned as a 1D array, so we can convert it to a diagonal matrix
 
-#     # Replace the minimum singular value with 0
-#     s_min_index = np.argmin(s)  # Find the index of the minimum singular value
-#     s[s_min_index] = 0  # Set the minimum singular value to 0
-#     # s_sorted_indices = np.argsort(s)  # Get indices of sorted singular values
-#     # s[s_sorted_indices[:3]] = 0
+    # Replace the minimum singular value with 0
+    # s_min_index = np.argmin(s)  # Find the index of the minimum singular value
+    # s[s_min_index] = 0  # Set the minimum singular value to 0
+    s_sorted_indices = np.argsort(s)  # Get indices of sorted singular values
+    s[s_sorted_indices[:3]] = 0
 
-#     # Reconstruct Sigma matrix with the modified singular values
-#     Sigma = np.zeros((U.shape[0], Vt.shape[0]))
-#     np.fill_diagonal(Sigma, s)
+    # Reconstruct Sigma matrix with the modified singular values
+    Sigma = np.zeros((U.shape[0], Vt.shape[0]))
+    np.fill_diagonal(Sigma, s)
 
-#     # print('sigma_new',Sigma)
+    # print('sigma_new',Sigma)
 
-#     # Reconstruct the matrix G_leap
-#     G_leap_reconstructed = np.dot(U, np.dot(Sigma, Vt))
+    # Reconstruct the matrix G_leap
+    G_leap_reconstructed = np.dot(U, np.dot(Sigma, Vt))
+
+    # Main control loop
+    posrot=PosRot()
+    T=transmatrix.T_obj_palm(object_pose_cam,palm_wrt_cam)
+
+    #q_final=posrot.q_subs(Td,T)
+
+    #Compute forces
+    #Fimp = np.dot(np.linalg.pinv(G_leap),np.dot(Kp_d , (q_final.reshape(6,1))))
+    Fnull = (I - np.matmul(np.linalg.pinv(G_leap_reconstructed), G_leap_reconstructed)) @ n0
+    
+    # Compute desired torque
+    Tau_dy = Jh_leap.T @ (Fnull)
+    # print('F_null',Fnull)
+    # w=np.dot(G_leap,Fnull)
+    # print('w',w)
 
 #     # print('G_new',G_leap_reconstructed)
 
@@ -284,19 +288,22 @@ def f(array,Td):
     # # Kinematic control torque
     # Tau_kin = Kp_k * (phi_d - phi)  # Corrected this line
     
-    # # Total torque
-    # Tau = Tau_dy + Tau_kin*0
-    # Tau_sim=Tau
-    # # print(Tau)
+    # Total torque
+    Tau = Tau_dy.copy()
+    print("Original Tau:", Tau.flatten())
 
+    # Store the original values before swapping
+    original_0 = Tau.flatten()[0]
+    original_1 = Tau.flatten()[1]
 
-
-    # temp = Tau[0].copy()  # Use a temporary variable to hold the value of Tau[0]
-    # Tau[0] = Tau[1]
-    # Tau[1] = temp
-
-    # Tau_real=np.hstack([Tau[:4].flatten(), np.zeros(8), Tau[-4:].flatten()])
-    # print('Tau',Tau_real)
+    # Create the new array with swapped values
+    Tau_real = np.hstack([
+        [original_1, original_0],  # Swap first two elements
+        Tau[2:4].flatten(),       # Rest of first 4 elements
+        np.zeros(8),              # Middle zeros
+        Tau[-4:].flatten()        # Last 4 elements
+    ])
+    print('Tau_real', Tau_real)
 
     # print(Tau_real)
 
@@ -310,14 +317,14 @@ def f(array,Td):
         
     #     print("Actual Position:", actual_position)
 
-    temp = qs_real[0].copy()  # Use a temporary variable to hold the value of Tau[0]
-    qs_real[0] = qs_real[1]
-    qs_real[1] = temp
+    # temp = qs_real[0].copy()  # Use a temporary variable to hold the value of Tau[0]
+    # qs_real[0] = qs_real[1]
+    # qs_real[1] = temp
 
-    save_to_csv(r_theta,G_leap,Jh_leap,qs_real,obj_pos)
+    # save_to_csv(r_theta,G_leap,Jh_leap,qs_real,obj_pos)
 
-    while True:
-        leap_hand.set_allegro(qs_real)
+    # while True:
+    #     leap_hand.set_allegro(qs_real)
     
 
     

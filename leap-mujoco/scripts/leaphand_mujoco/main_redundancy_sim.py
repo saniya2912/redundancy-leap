@@ -281,7 +281,6 @@ class GraspClass:
         
         return np.vstack([matrix1, matrix2])
 
-
     def G_full(self,n,contact_orientations, r_theta,bs):
         for i in range(n):
             G_i_matrix = self.G_i(contact_orientations[i],r_theta,bs[i])
@@ -338,7 +337,54 @@ class GraspClass:
         diagonal_stacked = block_diag(*[Hi for _ in range(n)])
 
         return diagonal_stacked
-    
+
+# class PosRot:
+#     def quaternion_multiply(self, q1, q2):
+#         # Extract quaternion components from Rotation objects
+#         q1 = q1.as_quat()  # [x1, y1, z1, w1]
+#         q2 = q2.as_quat()  # [x2, y2, z2, w2]
+
+#         x1, y1, z1, w1 = q1
+#         x2, y2, z2, w2 = q2
+
+#         # Perform quaternion multiplication
+#         w = w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2
+#         x = w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2
+#         y = w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2
+#         z = w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2
+
+#         # Return the result as a new Rotation object
+#         return R.from_quat([x, y, z, w])
+
+#     def quaternion_inverse(self, q):
+#         # Extract quaternion components as an array [x, y, z, w]
+#         quat = q.as_quat()  # Extract [x, y, z, w] from Rotation object
+#         x, y, z, w = quat  # Unpack the quaternion
+
+#         # Return the inverse of the quaternion
+#         return R.from_quat([x, -y, -z, -w])
+
+#     def q_subs(self, model, data, body_name):
+#         # Get the body ID from the model
+#         body_id = model.body(body_name).id
+
+#         # Access body position and quaternion from the data object
+#         pos = data.body_xpos[body_id]  # Dynamic position of the body [x, y, z]
+#         quat = data.body_xquat[body_id]  # Quaternion of the body [x, y, z, w]
+
+#         # Create a Rotation object from the quaternion
+#         quat_rot = R.from_quat(quat)
+
+#         # Convert the quaternion to Euler angles
+#         euler = quat_rot.as_euler('xyz', degrees=False)
+
+#         # Stack position and Euler angles into one array
+#         q_final = np.hstack((pos, euler))
+
+#         return q_final
+
+
+
 class PosRot:
     def quaternion_multiply(self, q1, q2):
     # Extract quaternion components from Rotation objects
@@ -366,30 +412,54 @@ class PosRot:
         return R.from_quat([x, -y, -z, -w])
 
 
-    def q_subs(self, model1, model2, data1, data2, body_name):
-        # Get positions
-        pos1 = data1.body(model1.body(body_name).id).xpos.reshape(3)
-        pos2 = data2.body(model2.body(body_name).id).xpos.reshape(3)
-        pos = pos1 - pos2
+    # def q_subs(self, model1, model2, data1, data2, body_name):
+    #     # Get positions
+    #     pos1 = data1.body(model1.body(body_name).id).xpos.reshape(3)
+    #     pos2 = data2.body(model2.body(body_name).id).xpos.reshape(3)
+    #     pos = pos1 - pos2
         
-        # Get quaternions from MuJoCo data (assuming they are in [x, y, z, w] format)
-        quat1 = data1.body(model1.body(body_name).id).xquat
-        quat2 = data2.body(model2.body(body_name).id).xquat
+    #     # Get quaternions from MuJoCo data (assuming they are in [x, y, z, w] format)
+    #     quat1 = data1.body(model1.body(body_name).id).xquat
+    #     quat2 = data2.body(model2.body(body_name).id).xquat
         
+    #     # Create Rotation objects from quaternions
+    #     quat1_rot = R.from_quat(quat1)  # Convert to Rotation object
+    #     quat2_rot = R.from_quat(quat2)  # Convert to Rotation object
+        
+    #     # Invert quat2 and multiply with quat1
+    #     quat2_rot_inv = self.quaternion_inverse(quat2_rot)  # Invert quaternion
+    #     relative_rot = self.quaternion_multiply(quat1_rot, quat2_rot_inv)  # Multiply
+        
+    #     # Convert the relative rotation to Euler angles
+    #     euler = relative_rot.as_euler('xyz', degrees=False)
+        
+    #     # Stack position and Euler angles into one array
+    #     q_final = np.hstack((pos, euler))
+        
+    #     return q_final
+
+    def q_subs(self, initial_pos, initial_quat, model, data, body_name):
+        # Get the current position and quaternion of the body
+        body_id = model.body(body_name).id
+        current_pos = data.xpos[body_id]  # Current position [x, y, z]
+        current_quat = data.xquat[body_id]  # Current quaternion [x, y, z, w]
+
+        # Compute the difference in positions
+        pos_error = current_pos - initial_pos
+
         # Create Rotation objects from quaternions
-        quat1_rot = R.from_quat(quat1)  # Convert to Rotation object
-        quat2_rot = R.from_quat(quat2)  # Convert to Rotation object
-        
-        # Invert quat2 and multiply with quat1
-        quat2_rot_inv = self.quaternion_inverse(quat2_rot)  # Invert quaternion
-        relative_rot = self.quaternion_multiply(quat1_rot, quat2_rot_inv)  # Multiply
-        
+        initial_rot = R.from_quat(initial_quat)  # Convert initial quaternion
+        current_rot = R.from_quat(current_quat)  # Convert current quaternion
+
+        # Compute the relative rotation
+        relative_rot = self.quaternion_multiply(current_rot, self.quaternion_inverse(initial_rot))
+
         # Convert the relative rotation to Euler angles
-        euler = relative_rot.as_euler('xyz', degrees=False)
-        
-        # Stack position and Euler angles into one array
-        q_final = np.hstack((pos, euler))
-        
+        euler_error = relative_rot.as_euler('xyz', degrees=False)
+
+        # Stack position and Euler angle errors into one array
+        q_final = np.hstack((pos_error, euler_error))
+
         return q_final
         
 import numpy as np

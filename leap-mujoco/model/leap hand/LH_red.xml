@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mujoco model="Leap Hand">
+  <compiler angle="radian"/>
+  
+  <!-- Improved Simulation Parameters -->
+  <option timestep="0.001" integrator="RK4" cone="elliptic" solver="Newton" 
+          iterations="150" tolerance="1e-10" noslip_iterations="20">
+    <flag gravity="enable"/>
+  </option>
+
+  <asset>
+    <mesh name="palm_lower" file="palm_lower.stl"/>
+    <mesh name="mcp_joint" file="mcp_joint.stl"/>
+    <mesh name="pip" file="pip.stl"/>
+    <mesh name="dip" file="dip.stl"/>
+    <mesh name="fingertip" file="fingertip.stl"/>
+    <mesh name="thumb_dip" file="thumb_dip.stl"/>
+    <mesh name="thumb_fingertip" file="thumb_fingertip.stl"/>
+    <mesh name="thumb_pip" file="thumb_pip.stl"/>
+    <texture name="grid" type="2d" builtin="checker" width="512" height="512" 
+             rgb1=".1 .2 .3" rgb2=".2 .3 .4"/>
+    <material name="grid" texture="grid" texrepeat="1 1" texuniform="true" reflectance="0"/>
+    <material name="box" rgba="0.2 0.6 0.9 1" specular="0.5" reflectance="0.1"/>
+    <material name="soft_material" rgba="0.2 0.8 0.2 1" specular="0.1" reflectance="0.1" 
+              shininess="0.1"/>
+  </asset>
+
+  <worldbody>
+    <light name="top" pos="0 0 1"/>
+    <geom type="plane" pos="0 0 -0.15" size="3 3 .01" material="grid"/>
+    <camera name="closeup" mode="fixed" pos="-0.02 1 0.025" xyaxes="-1 0 0 0 0 1"/>
+    <camera name="top" mode="fixed" pos="0 0 0.8" xyaxes="1 0 0 0 1 0"/>
+
+    <body name="cube" pos="-0.0 0.05 -0.135">
+      <inertial pos="0 0 0" mass="0.01" diaginertia="0.001 0.001 0.001"/>
+      <geom name="cube" type="box" size="0.028 0.08 0.015" material="box" 
+            condim="4" friction="1.5 0.7 0.01"/>
+      <site name="contact_index1" pos="0.040 0 0" quat="0.7071 0 -0.7071 0" size="0.001"/>
+      <site name="contact_thumb1" pos="-0.040 0 0" quat="0.7071 0 0.7071 0" size="0.001"/>
+      <site name="contact_index2" pos="0.028 0 0" quat="0.7071 0 -0.7071 0" size="0.001"/>
+      <site name="contact_thumb2" pos="-0.028 0 0" quat="0.7071 0 0.7071 0" size="0.001"/>
+      <joint name="box" type="free"/>
+    </body>
+
+    <!-- Palm and Finger Definitions -->
+    <body name="palm" pos="0 0 0">
+      <geom name="palm" pos="0.025112 0.062744 -0.023246" type="mesh" 
+            mesh="palm_lower" rgba="0.603922 0.14902 0.14902 1"/>
+
+      <body name="mcp_joint" pos="0.03811195 0.060044 -0.007246" quat="0.5 0.5 0.5 -0.5">
+        <joint name="1" axis="0 0 -1" range="-0.314 2.23" damping="0.2"/>
+        <geom pos="0.0084069 0.00776624 0.0146574" type="mesh" mesh="mcp_joint"/>
+        <body name="pip" pos="-0.0122 0.0381 0.0145" quat="0.5 -0.5 -0.5 0.5">
+          <joint name="0" axis="0 0 -1" range="-1.047 1.047" damping="0.2"/>
+          <geom pos="0.00964336 0.0003 0.000784034" type="mesh" mesh="pip"/>
+          <body name="dip" pos="0.015 0.0143 -0.013" quat="0.5 0.5 -0.5 0.5">
+            <joint name="2" axis="0 0 -1" range="-0.506 1.885" damping="0.2"/>
+            <geom pos="0.0211334 -0.00843212 0.00978509" type="mesh" mesh="dip"/>
+            <body name="fingertip" pos="-4.08806e-09 -0.0361 0.0002">
+              <joint name="3" axis="0 0 -1" range="-0.366 2.042" damping="0.2"/>
+              <geom pos="0.0132864 -0.00611424 0.0145" type="mesh" mesh="fingertip" 
+                    condim="4" solimp="0.99 0.99 0.01" solref="0.01 1"/>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+
+    <!-- Additional Joints and Fingers -->
+    <body name="mcp_joint_2" pos="0.03811195 0.014594 -0.007246" quat="0.5 0.5 0.5 -0.5">
+      <joint name="5" axis="0 0 -1" range="-0.314 2.23" damping="0.2"/>
+      <geom pos="0.0084069 0.00776624 0.0146574" type="mesh" mesh="mcp_joint"/>
+      <body name="pip_2" pos="-0.0122 0.0381 0.0145" quat="0.5 -0.5 -0.5 0.5">
+        <joint name="4" axis="0 0 -1" range="-1.047 1.047" damping="0.2"/>
+        <geom pos="0.00964336 0.0003 0.000784034" type="mesh" mesh="pip"/>
+        <body name="dip_2" pos="0.015 0.0143 -0.013" quat="0.5 0.5 -0.5 0.5">
+          <joint name="6" axis="0 0 -1" range="-0.506 1.885" damping="0.2"/>
+          <geom pos="0.0211334 -0.00843212 0.00978509" type="mesh" mesh="dip"/>
+          <body name="fingertip_2" pos="0 -0.0361 0.0002">
+            <joint name="7" axis="0 0 -1" range="-0.366 2.042" damping="0.2"/>
+            <geom pos="0.0132864 -0.00611424 0.0145" type="mesh" mesh="fingertip"/>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <motor name="motor_1" joint="1"/>
+    <motor name="motor_0" joint="0"/>
+    <motor name="motor_2" joint="2"/>
+    <motor name="motor_3" joint="3"/>
+    <motor name="motor_5" joint="5"/>
+    <motor name="motor_4" joint="4"/>
+    <motor name="motor_6" joint="6"/>
+    <motor name="motor_7" joint="7"/>
+  </actuator>
+
+  <contact>
+    <exclude body1="palm" body2="mcp_joint"/>
+  </contact>
+</mujoco>

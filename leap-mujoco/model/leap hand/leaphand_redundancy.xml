@@ -27,18 +27,22 @@
   <worldbody>
 
     <light name="top" pos="0 0 1"/>
-    <geom type="plane" pos="0 0 -0.158" size="3 3 .01" material="grid"/>
+    <geom type="plane" pos="0 0 -0.15" size="3 3 .01" material="grid" solref="0.00001 1" friction="0 0 0"/>
     <camera name="closeup" mode="fixed" pos="-0.02 1 0.025" xyaxes="-1 0 0 0 0 1"/>
     <camera name="top" mode="fixed" pos="0 0 0.8" xyaxes="1 0 0 0 1 0"/>
     
 
-    <body name="cube" pos="-0.0 0.005 -0.143">
+    <body name="cube" pos="-0.0 0.05 -0.135">
     <inertial pos="0 0 0" mass="0.001" diaginertia="0.001 0.001 0.001"/>
-    <geom name="cube" type="box" size="0.028 0.08 0.015" material="box" condim="4" friction="1.2 0.5 0.0001"/>
-    <site name="contact_index1" pos="0.040 0 0" quat="0.7071 0 0.7071 0"/>
+    <geom name="cube" type="box" size="0.028 0.08 0.015" material="box" condim="4" mass="0.2" friction="0.9 0.5 0.0001" solimp="0.99 0.99 0.01" solref="0.001 1"/>
+    <!-- <site name="contact_index1" pos="0.040 0 0" quat="0.7071 0 0.7071 0"/>
     <site name="contact_thumb1" pos="-0.040 0 0" quat="0.7071 -0.7071 0 0"/>
     <site name="contact_index2" pos="0.028 0 0" quat="0.7071 0 0.7071 0"/>
-    <site name="contact_thumb2" pos="-0.028 0 0" quat="0.7071 -0.7071 0 0"/>
+    <site name="contact_thumb2" pos="-0.028 0 0" quat="0.7071 -0.7071 0 0"/> -->
+    <site name="contact_index1" pos="0.040 0 0" quat="0.7071 0 -0.7071 0" size="0.001"/>
+    <site name="contact_thumb1" pos="-0.040 0 0" quat="0.7071 0 0.7071 0" size="0.001"/>
+    <site name="contact_index2" pos="0.028 0 0" quat="0.7071 0 -0.7071 0" size="0.001"/>
+    <site name="contact_thumb2" pos="-0.028 0 0" quat="0.7071 0 0.7071 0" size="0.001"/>
     <!-- <site name="contact_push" pos="-0.027 0.065 0" quat="0.7071 -0.7071 0 0"/> -->
     <!-- <site name="contact_middle" pos="0 0.01 -0.025" quat="0 0 1 0"/> -->
     <joint name="box" type="free"/>
@@ -65,8 +69,9 @@
             <!-- <inertial pos="0 0 0" quat="0.706755 0.706755 0.0223155 0.0223155" mass="0.016" diaginertia="3.37527e-06 2.863e-06 1.54873e-06"/> -->
             <joint name="3" pos="0 0 0" axis="0 0 -1" range="-0.366 2.042" damping="0.1"/>
             <!-- <geom pos="0.0132864 -0.00611424 0.0145" quat="0 1 0 0" type="mesh" rgba="0.866667 0.866667 0.0509804 1" mesh="fingertip" solimp="0.6 0.8 0.01 0.02 0.001" solref="0.02 0.8" margin="0.005" material="soft_material"/> -->
-            <geom pos="0.0132864 -0.00611424 0.0145" quat="0 1 0 0" type="mesh" rgba="0.866667 0.866667 0.0509804 1" mesh="fingertip" condim="4" solimp="0.99 0.99 0.01" solref="0.01 1"/>
-            <site name="contact_index" pos="-0.01 -0.048 0.015" quat="0.5 -0.5 0.5 -0.5"/>
+            <geom pos="0.0132864 -0.00611424 0.0145" quat="0 1 0 0" type="mesh" rgba="0.866667 0.866667 0.0509804 1" mesh="fingertip" condim="4" solimp="0.99 0.99 0.01" solref="0.001 1" friction="0.9 0.5 0.0001"/>
+            <site name="contact_index" pos="-0.01 -0.048 0.015" quat="0.5 -0.5 0.5 -0.5" size="0.001"/>
+            <!-- <site name="contact_index" pos="-0.01 -0.048 0.015" quat="0.5 -0.5 0.5 -0.5"/> -->
           </body>
         </body>
       </body>
@@ -123,8 +128,9 @@
           <body name="thumb_fingertip_4" pos="0 0.0466 0.0002" quat="0 0 0 1">
             <!-- <inertial pos="0 0 0" quat="0.704307 0.709299 0.006848 -0.0282727" mass="0.049" diaginertia="2.03882e-05 1.98443e-05 4.32049e-06"/> -->
             <joint name="15" pos="0 0 0" axis="0 0 -1" range="-1.34 1.88" damping="0.1"/>
-            <geom pos="0.0625595 0.0784597 0.0489929" type="mesh" rgba="0.603922 0.14902 0.14902 1" mesh="thumb_fingertip" condim="4" solimp="0.99 0.99 0.01" solref="0.01 1"/>
-            <site name="contact_thumb" pos="-0.01 -0.048 -0.015" quat="0 0 0 1"/>
+            <geom pos="0.0625595 0.0784597 0.0489929" type="mesh" rgba="0.603922 0.14902 0.14902 1" mesh="thumb_fingertip" condim="4" solimp="0.99 0.99 0.01" solref="0.001 1" friction="0.9 0.5 0.0001"/>
+            <site name="contact_thumb" pos="-0.01 -0.064 -0.015" quat="0 0 0 1" size="0.001"/>
+            <!-- <site name="contact_thumb" pos="-0.01 -0.048 -0.015" quat="0 0 0 1"/> -->
           </body>
         </body>
       </body>
@@ -154,9 +160,9 @@
 
 <sensor>
     <force name='index_force' site='contact_index' />
-    <force name='thumb_force' site='contact_index' />
+    <force name='thumb_force' site='contact_thumb' />
     <torque name='index_torque' site='contact_index' />
-    <torque name='thumb_torque' site='contact_index' />
+    <torque name='thumb_torque' site='contact_thumb' />
 </sensor>
 
 <contact>

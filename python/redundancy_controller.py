@@ -24,8 +24,8 @@ leap_hand = LeapNode_Poscontrol()
 #     combined_df.to_csv('pos5.csv', index=False)
 
 
-index_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_index_sim.xml'
-thumb_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_thumb_sim.xml'
+index_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_index.xml'
+thumb_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_thumb.xml'
 # index_path_J="/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/index_new.xml"
 # thumb_path_J="/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/thumb_new.xml"
 
@@ -40,9 +40,10 @@ pos_ik_thumb=OnlyPosIK(thumb_path)
 # Rpk_index_J=np.array([[ 1.,  0., 0.],
 #                     [0.,  -1.,  0.],         
 #                     [ 0.,  0.,  -1.]])
-Rpk_index=np.array([[ 0.,  -1.,   0.],
-[ 0.,   0.,  -1.],
-[ 1.,   0.,   0.]])
+# Rpk_index=np.array([[ 0.,  -1.,   0.],
+# [ 0.,   0.,  -1.],
+# [ 1.,   0.,   0.]])
+Rpk_index=np.eye(3)
 
 
 # T_thumbbase_palm=np.array([[0, 0, 1, -0.024188],
@@ -53,9 +54,10 @@ Rpk_index=np.array([[ 0.,  -1.,   0.],
 # Rpk_thumb_J=np.array([[ 1.,  0., 0.],
 #                     [0.,  0.,  -1.],         
 #                     [ 0.,  1.,  0.]])
-Rpk_thumb=np.array([[ 0.,  -1.,   0.],
-[ 0.,   0.,  -1.],
-[ 1.,   0.,   0.]])
+# Rpk_thumb=np.array([[ 0.,  -1.,   0.],
+# [ 0.,   0.,  -1.],
+# [ 1.,   0.,   0.]])
+Rpk_thumb=np.eye(3)
 
 Rpks=[Rpk_index,Rpk_thumb]
 # Rpks_J=[Rpk_index_J,Rpk_thumb_J]
@@ -67,9 +69,6 @@ palm_wrt_cam =  np.array([
     [-0.48489177, -0.19362427, 0.85287136, 0.4968603],
     [0., 0., 0., 1.]
 ])
-
-
-
 
 
 grasp = GraspClass()
@@ -88,7 +87,6 @@ def initialize(filename):
             result = transmatrix.T_obj_palm(np.array(array),palm_wrt_cam)
             #print("Result of computation:", result)
             
-
     except FileNotFoundError:
         print(f"File '{filename}' not found. Make sure the file exists.")
     except Exception as e:
@@ -124,8 +122,6 @@ def f(array,Td):
     qs1=qs[:4]
     qs2=qs[-4:]
 
-    
-    
     # print('obj_pos_mujoco',x_obj_pbm)
     
     # obj_pos_mujoco=np.array([0,0,-0.1])
@@ -149,7 +145,7 @@ def f(array,Td):
     
     #from mujoco xml filif __name__ == "__main__":
     J_index=grasp2.J(index_path,'contact_index',qs1)
-    J_thumb=grasp2.J(thumb_path,'contact_thumb',qs2)
+    J_thumb=grasp2.J(thumb_path,'contact_thumb_end',qs2)
 
     # J_index_J=grasp2.J(index_path_J,'contact_index',qs1)
     # J_thumb_J=grasp2.J(thumb_path_J,'contact_thumb',qs2)

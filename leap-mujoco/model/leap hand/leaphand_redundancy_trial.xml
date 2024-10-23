@@ -50,7 +50,8 @@
 
       
     
-    <body name="palm" pos="0 0 0">
+    <body name="palm_cam" pos="0 0 0">
+    <body name="palm_mujoco" pos="0 0 0" quat="-0.5 -0.5 0.5 0.5">
     <geom name="palm" pos="0.025112 0.062744 -0.023246" type="mesh" rgba="0.603922 0.14902 0.14902 1" mesh="palm_lower"/>
     
     <body name="mcp_joint" pos="0.03811195 0.060044 -0.007246" quat="0.5 0.5 0.5 -0.5">
@@ -135,6 +136,7 @@
       </body>
     </body>
     </body>
+    </body>
    
     
   </worldbody>
@@ -166,10 +168,10 @@
 </sensor>
 
 <contact>
-<exclude body1="palm" body2="mcp_joint"/>
-<exclude body1="palm" body2="mcp_joint_2"/>
-<exclude body1="palm" body2="mcp_joint_3"/>
-<exclude body1="palm" body2="pip_4"/>
+<exclude body1="palm_mujoco" body2="mcp_joint"/>
+<exclude body1="palm_mujoco" body2="mcp_joint_2"/>
+<exclude body1="palm_mujoco" body2="mcp_joint_3"/>
+<exclude body1="palm_mujoco" body2="pip_4"/>
 </contact>
 
 </mujoco>

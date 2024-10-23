@@ -25,10 +25,10 @@
     <!-- <body name="mcp_joint" pos="-0.00709525 0.0230578 -0.0187224" quat="0.5 0.5 0.5 -0.5"> -->
         
     <body name="mcp_joint" pos="0.03811195 0.060044 -0.007246" quat="0.5 0.5 0.5 -0.5">
-      <joint name="1" pos="0 0 0" axis="0 0 -1" range="-0.314 2.23"/>
+      <joint name="mcp" pos="0 0 0" axis="0 0 -1" range="-0.314 2.23"/>
       <geom pos="0.0084069 0.00776624 0.0146574" quat="1 0 0 0" type="mesh" rgba="0.866667 0.866667 0.0509804 1" mesh="mcp_joint"/>
       <body name="pip" pos="-0.0122 0.0381 0.0145" quat="0.5 -0.5 -0.5 0.5">
-        <joint name="0" pos="0 0 0" axis="0 0 -1" range="-1.047 1.047"/>
+        <joint name="pip" pos="0 0 0" axis="0 0 -1" range="-1.047 1.047"/>
         <geom pos="0.00964336 0.0003 0.000784034" quat="0.5 -0.5 -0.5 -0.5" type="mesh" rgba="0.74902 0.74902 0.74902 1" mesh="pip"/>
         <body name="dip" pos="0.015 0.0143 -0.013" quat="0.5 0.5 -0.5 0.5">
           <joint name="2" pos="0 0 0" axis="0 0 -1" range="-0.506 1.885"/>
@@ -47,8 +47,8 @@
   </worldbody>
 
   <actuator>
-    <motor name="motor_1" joint="1"/>
-    <motor name="motor_0" joint="0"/>
+    <motor name="motor_1" joint="mcp"/>
+    <motor name="motor_0" joint="pip"/>
     <motor name="motor_2" joint="2"/>
     <motor name="motor_3" joint="3"/>
   </actuator>

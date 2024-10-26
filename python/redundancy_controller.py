@@ -24,8 +24,8 @@ leap_hand = LeapNode_Poscontrol()
 #     combined_df.to_csv('pos5.csv', index=False)
 
 
-index_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_index.xml'
-thumb_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_thumb.xml'
+index_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_index_sim.xml'
+thumb_path='/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/0_thumb_sim.xml'
 # index_path_J="/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/index_new.xml"
 # thumb_path_J="/home/saniya/LEAP/redundancy-leap/leap-mujoco/model/leap hand/redundancy/thumb_new.xml"
 
@@ -40,10 +40,10 @@ pos_ik_thumb=OnlyPosIK(thumb_path)
 # Rpk_index_J=np.array([[ 1.,  0., 0.],
 #                     [0.,  -1.,  0.],         
 #                     [ 0.,  0.,  -1.]])
-# Rpk_index=np.array([[ 0.,  -1.,   0.],
-# [ 0.,   0.,  -1.],
-# [ 1.,   0.,   0.]])
-Rpk_index=np.eye(3)
+Rpk_index=np.array([[ 0.,  -1.,   0.],
+[ 0.,   0.,  -1.],
+[ 1.,   0.,   0.]])
+# Rpk_index=np.eye(3)
 
 
 # T_thumbbase_palm=np.array([[0, 0, 1, -0.024188],
@@ -54,10 +54,10 @@ Rpk_index=np.eye(3)
 # Rpk_thumb_J=np.array([[ 1.,  0., 0.],
 #                     [0.,  0.,  -1.],         
 #                     [ 0.,  1.,  0.]])
-# Rpk_thumb=np.array([[ 0.,  -1.,   0.],
-# [ 0.,   0.,  -1.],
-# [ 1.,   0.,   0.]])
-Rpk_thumb=np.eye(3)
+Rpk_thumb=np.array([[ 0.,  -1.,   0.],
+[ 0.,   0.,  -1.],
+[ 1.,   0.,   0.]])
+# Rpk_thumb=np.eye(3)
 
 Rpks=[Rpk_index,Rpk_thumb]
 # Rpks_J=[Rpk_index_J,Rpk_thumb_J]
@@ -156,6 +156,32 @@ def f(array,Td):
     
     # print('Rpks.shape')
     Jh_leap=grasp2.Jh(n, contact_orientations, Rpks, Js)
+    U_Jh, s_Jh, Vt_Jh = np.linalg.svd(Jh_leap)
+
+    condition_number = np.linalg.cond(Jh_leap)
+
+    print("Condition Number of JH:", condition_number)
+    
+    # print(s)
+
+# s is returned as a 1D array, so we can convert it to a diagonal matrix
+
+    # Replace the minimum singular value with 0
+    # s_min_index = np.argmin(s_Jh)  # Find the index of the minimum singular value
+    # s_Jh[s_min_index] = 0  # Set the minimum singular value to 0
+    # s_sorted_indices = np.argsort(s_Jh)  # Get indices of sorted singular values
+    # s_Jh[s_sorted_indices[:3]] = 0
+
+    # Reconstruct Sigma matrix with the modified singular values
+    Sigma_Jh = np.zeros((U_Jh.shape[0], Vt_Jh.shape[0]))
+    np.fill_diagonal(Sigma_Jh, s_Jh)
+    print('Sigma_Jh',Sigma_Jh)
+
+    # print('sigma_new',Sigma)
+
+    # Reconstruct the matrix G_leap
+    Jh_leap_reconstructed = np.dot(U_Jh, np.dot(Sigma_Jh, Vt_Jh))
+
     # Jh_leap_J=grasp2.Jh(n, contact_orientations, Rpks_J, Js_J)
     # print('Jh_leap',Jh_leap)
     # print('Jh_leap_J',Jh_leap_J.shape)
@@ -188,7 +214,7 @@ def f(array,Td):
     Kp_d = 0.1*np.eye(6)
     Kp_k = 1
 
-    n0 =10*np.ones([6,1])
+    n0 =0.5*np.ones([6,1])
     I = np.eye(6)
     phi_d = np.ones([8,1])
 
@@ -226,14 +252,14 @@ def f(array,Td):
     posrot=PosRot()
     T=transmatrix.T_obj_palm(object_pose_cam,palm_wrt_cam)
 
-    #q_final=posrot.q_subs(Td,T)
+    q_final=posrot.q_subs(Td,T)
 
     #Compute forces
-    #Fimp = np.dot(np.linalg.pinv(G_leap),np.dot(Kp_d , (q_final.reshape(6,1))))
+    Fimp = np.dot(np.linalg.pinv(G_leap),np.dot(Kp_d , (q_final.reshape(6,1))))
     Fnull = (I - np.matmul(np.linalg.pinv(G_leap_reconstructed), G_leap_reconstructed)) @ n0
     
     # Compute desired torque
-    Tau_dy = Jh_leap.T @ (Fnull)
+    Tau_dy = Jh_leap.T @ (Fnull + Fimp)
     # print('F_null',Fnull)
     # w=np.dot(G_leap,Fnull)
     # print('w',w)

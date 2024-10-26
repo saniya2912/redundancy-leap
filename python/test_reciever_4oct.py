@@ -11,7 +11,7 @@ def receive_all(sock, length):
         data += packet
     return data
 
-
+    
 def receive_array():
    # host = '10.0.58.25'  # or the IP of the producer if running on a different host
     host='10.7.40.192'

@@ -187,6 +187,7 @@ def f(array,Td):
     # print('Jh_leap_J',Jh_leap_J.shape)
     # print('Jh',Jh_leap.shape)
     G_leap=grasp2.G(n, contact_orientations, r_theta, bs)
+    print('G',G_leap)
     # print('G_leap',G_leap)
 
 #     # F=np.array([0,0,1,0,0,1]).reshape(6,1)
@@ -259,7 +260,11 @@ def f(array,Td):
     Fnull = (I - np.matmul(np.linalg.pinv(G_leap_reconstructed), G_leap_reconstructed)) @ n0
     
     # Compute desired torque
-    Tau_dy = Jh_leap.T @ (Fnull + Fimp)
+    Tau_null = Jh_leap.T @ Fnull
+    print('Tau_null',Tau_null)
+    Tau_imp = Jh_leap.T @ Fimp
+    print('Tau_imp',Tau_imp)
+    Tau_dy = Tau_null + Tau_imp
     # print('F_null',Fnull)
     # w=np.dot(G_leap,Fnull)
     # print('w',w)
@@ -325,6 +330,7 @@ def f(array,Td):
         np.zeros(8),              # Middle zeros
         Tau[-4:].flatten()        # Last 4 elements
     ])
+
     print('Tau_real', Tau_real)
 
     # print(Tau_real)
@@ -333,7 +339,7 @@ def f(array,Td):
     # while 0 < time.time() - start_time < 10:
     #     print(f"Elapsed Time: {time.time() - start_time:.2f} seconds")
     #     leap_hand.set_desired_torque(Tau_real)
-        
+           
     #     actual_position = leap_hand.read_pos()  # Read the actual position
     #     print("Sent Torque:", Tau_real)
         
@@ -374,7 +380,7 @@ def load_and_compute(filename,Td):
     # array=np.random.rand(4,4)
     # f(np.array(array))
     
-
+    
 if __name__ == "__main__":
     # Specify the filename of the saved array
     filename = '/tmp/received_array.pkl'
